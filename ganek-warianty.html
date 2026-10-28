@@ -462,6 +462,27 @@ function dimV(b, x, ya, yb2, label, left) {
   TX(b, left ? x - 8 : x + 8, (ya + yb2) / 2 - 5, label, 13, left ? 'end' : 'start');
 }
 
+// Dimension chains for the close-up drawings: every opening edge gets a tick.
+const r2 = v => Math.round(v * 100) / 100, fmt2 = v => String(r2(v)).replace('.', ',');
+function chainH(b, xs, yy) {
+  xs = [...new Set(xs.map(r2))].sort((a, b2) => a - b2);
+  L(b, xs[0], yy, xs[xs.length - 1], yy, '#6f665d', 1);
+  xs.forEach(x => L(b, x, yy - 5, x, yy + 5, '#6f665d', 1));
+  for (let i = 0; i < xs.length - 1; i++) TX(b, (xs[i] + xs[i + 1]) / 2, yy - 15, fmt2(xs[i + 1] - xs[i]), 12);
+}
+function chainV(b, x, ys, left) {
+  ys = [...new Set(ys.map(r2))].sort((a, b2) => a - b2);
+  L(b, x, ys[0], x, ys[ys.length - 1], '#6f665d', 1);
+  ys.forEach(v => L(b, x - 5, v, x + 5, v, '#6f665d', 1));
+  for (let i = 0; i < ys.length - 1; i++) TX(b, left ? x - 7 : x + 7, (ys[i] + ys[i + 1]) / 2 - 4, fmt2(ys[i + 1] - ys[i]), 12, left ? 'end' : 'start');
+}
+// size label on an opening, rotated for narrow ones
+function sizeLabel(b, o) {
+  const s = `${fmt2(o.w)} × ${fmt2(o.h)}`, rot = o.w < 60, cx = o.x + o.w / 2, cy = o.yb + o.h * (o.t === 'door' ? 0.3 : 0.5);
+  const tw = s.length * 6.6 + 8;
+  b.push(`<g transform="translate(${n(cx)},${n(y(cy))})${rot ? ' rotate(-90)' : ''}"><rect x="${n(-tw / 2)}" y="-9" width="${n(tw)}" height="15" rx="3" fill="#fffffff2" stroke="#6f665d" stroke-width="0.5"/><text x="0" y="3" font-size="11.5" text-anchor="middle" fill="#2b2622" font-family="-apple-system,system-ui,sans-serif">${s}</text></g>`);
+}
+
 function facade(vk, mode) {
   const b = [];
   b.push(`<rect x="-300" y="${y(0)}" width="2200" height="60" fill="#d5ccba"/>`);
@@ -475,11 +496,18 @@ function facade(vk, mode) {
   }
   if (mode === 'gclean') return `<svg viewBox="240 110 680 560" xmlns="http://www.w3.org/2000/svg">${b.join('')}</svg>`;
   person(b, 300);
-  const { rY } = roofGeom();
-  dimH(b, G.x0, G.x1, -14, '412 (wewn. 352)');
-  dimV(b, 822, 30, 265, '235');
-  dimV(b, 362, 0, rY, `kalenica ${Math.round(rY)}`, true);
-  return `<svg viewBox="240 110 680 560" xmlns="http://www.w3.org/2000/svg">${b.join('')}</svg>`;
+  const { rY, eY } = roofGeom(), v = VV(vk);
+  const ops = v.front.filter(o => o.t === 'door' || o.t === 'win');
+  ops.filter(o => !o.tr || o.h >= 15).forEach(o => sizeLabel(b, o));
+  // widths: wall, gaps and openings along the front; then the overall width
+  chainH(b, [G.x0, G.x1, ...ops.flatMap(o => [o.x, o.x + o.w])], -16);
+  dimH(b, G.x0, G.x1, -52, '412 z zewnątrz (wewn. 352)');
+  // heights from the ground: floor, sills, heads, transoms, ceiling
+  chainV(b, 832, [0, 30, ...ops.flatMap(o => [o.yb, o.yb + o.h]), 265]);
+  dimV(b, 262, 0, rY, '', true); TX(b, 254, rY - 40, `kalenica ${Math.round(rY)}`, 13, 'end');
+  dimV(b, 238, 0, eY, `okap ${Math.round(eY)}`, true);
+  TX(b, 560, -88, 'wysokości od terenu; podłoga ganku 30, sufit 265 (235 nad podłogą)', 12, 'middle', '#6f665d');
+  return `<svg viewBox="130 110 790 650" xmlns="http://www.w3.org/2000/svg">${b.join('')}</svg>`;
 }
 
 function sideView(vk) {
@@ -511,9 +539,13 @@ function sideView(vk) {
   TX(b, 445, 215, st.eave === 'rynna' ? 'rynna ganku łączy się z rynną domu' : 'rynna ganku 30 cm nad rynną domu', 13, 'middle', '#4a5f78');
   R(b, fx - 92, 0, 92, 15, '#b0644a', '#8d4c37', 0.8);
   R(b, fx - 62, 15, 62, 15, '#b0644a', '#8d4c37', 0.8);
-  dimH(b, fx, hx, -14, '150');
+  const sops = v.side.filter(o => o.t === 'win');
+  sops.forEach(o => sizeLabel(b, o));
+  chainH(b, [fx, hx, ...sops.flatMap(o => [o.x, o.x + o.w])], -16);
+  dimH(b, fx, hx, -52, '150 z zewnątrz');
+  chainV(b, -12, [0, 30, ...sops.flatMap(o => [o.yb, o.yb + o.h]), 265], true);
   TX(b, 450, 150, 'ściana domu', 14, 'middle', '#4a5f78');
-  return `<svg viewBox="40 110 600 560" xmlns="http://www.w3.org/2000/svg">${b.join('')}</svg>`;
+  return `<svg viewBox="-80 110 720 620" xmlns="http://www.w3.org/2000/svg">${b.join('')}</svg>`;
 }
 
 function plan(vk) {
