@@ -36,6 +36,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#cfe3f4;font:14px/1.45
   <div class="row"><span class="l">Naświetla</span><span class="seg" id="c-trs"></span></div>
   <div class="row"><span class="l">Szyby frontu</span><span class="seg" id="c-szyby"></span></div>
   <div class="row"><span class="l">Okno w boku</span><span class="seg" id="c-bok"></span></div>
+  <div class="row"><span class="l">Wokół okien</span><span class="seg" id="c-op"></span></div>
   <div class="row"><span class="l">Głębokość</span><span class="seg" id="c-depth"></span></div>
   <div class="hint">Przeciągnij: obrót · Shift + przeciągnij lub prawy przycisk: przesunięcie · kółko lub dwa palce: zbliżenie. Wymiary w skali, dom według pomiarów i szacunków ze zdjęć.</div>
 </div>
@@ -116,9 +117,9 @@ const V = {
   },
 };
 
-const st = { v: 'A', eave: 'rynna', pitch: 35, fin: 'biel', gw: 'kapliczka', pas: 'belka', trs: 'nie', szyby: '2', bok: '86', depth: 150, cam: 'p45' };
+const st = { v: 'A', eave: 'rynna', pitch: 35, fin: 'biel', gw: 'kapliczka', pas: 'belka', trs: 'nie', szyby: '2', bok: '86', op: 'listwa', depth: 150, cam: 'p45' };
 const q = new URLSearchParams(location.search);
-['v', 'eave', 'fin', 'gw', 'pas', 'trs', 'szyby', 'bok', 'cam'].forEach(k => { if (q.get(k)) st[k] = q.get(k); });
+['v', 'eave', 'fin', 'gw', 'pas', 'trs', 'szyby', 'bok', 'op', 'cam'].forEach(k => { if (q.get(k)) st[k] = q.get(k); });
 ['pitch', 'depth'].forEach(k => { if (q.get(k)) st[k] = +q.get(k); });
 
 const HOUSE = { len: 1513, depth: 730, eave: 282, edge: 284, ridge: 580, ov: 45, soffit: 265 };
@@ -223,7 +224,7 @@ function boardsWall(g, map, len, openings, yb, yt, thick, p) {
     });
   });
   // sill-level rail board, only on solid wall (never across a door)
-  pieces.filter(([a, b, y0, y1]) => y0 <= SILL - 3 && y1 >= SILL + 3).forEach(([a, b]) => map(g, a, b, SILL - 3, SILL + 3, -1.5, 0, mat(p.post)));
+  if (st.op !== 'opaski') pieces.filter(([a, b, y0, y1]) => y0 <= SILL - 3 && y1 >= SILL + 3).forEach(([a, b]) => map(g, a, b, SILL - 3, SILL + 3, -1.5, 0, mat(p.post)));
 }
 
 function windowAt(g, map, o, u, p) {
@@ -242,10 +243,23 @@ function windowAt(g, map, o, u, p) {
   }
   for (let i = 1; i < o.c; i++) { const x = gx + i * gw / o.c; map(g, x - 1.5, x + 1.5, gy, gy + mh, 6.5, 9.5, fm); }
   for (let j = 1; j < o.r; j++) { const yy = gy + j * mh / o.r; map(g, gx, gx + gw, yy - 1.5, yy + 1.5, 6.5, 9.5, fm); }
-  if (!o.tr && o.yb > 40) map(g, u - 5, u + o.w + 5, o.yb - 5, o.yb, -5, 6, mat(p.sill));
+  opaska3d(g, map, o, u, p);
+  if (!o.tr && o.yb > 40) {
+    if (st.op === 'opaski') map(g, u - 13, u + o.w + 13, o.yb - 5, o.yb, -5, 6, mat(p.frame)); // pine sill
+    else map(g, u - 5, u + o.w + 5, o.yb - 5, o.yb, -5, 6, mat(p.sill));
+  }
 }
 
+// white trim (opaska) on the sides and top of an opening, used with st.op === 'opaski'
+function opaska3d(g, map, o, u, p) {
+  if (st.op !== 'opaski') return;
+  const m = mat(p.post);
+  map(g, u - 10, u, o.yb, o.yb + o.h + 10, -2, 0, m);
+  map(g, u + o.w, u + o.w + 10, o.yb, o.yb + o.h + 10, -2, 0, m);
+  map(g, u - 10, u + o.w + 10, o.yb + o.h, o.yb + o.h + 10, -2, 0, m);
+}
 function doorAt(g, map, o, u, p) {
+  opaska3d(g, map, o, u, p);
   const f = 6, fm = mat(p.frame, { roughness: 0.6 }), lm = mat(p.leaf, { roughness: 0.7 }), gm = mat(C.glassDark, { roughness: 0.1, metalness: 0.4 });
   map(g, u, u + o.w, o.yb + o.h - f, o.yb + o.h, 4, 12, fm);
   map(g, u, u + f, o.yb, o.yb + o.h, 4, 12, fm);
@@ -572,6 +586,7 @@ function ui() {
   seg('c-fin', 'fin', [['sosna', 'sama sosna'], ['biel', 'sosna + białe opaski'], ['nieb', 'niebieski'], ['niebb', 'niebieski + białe okna']], rebuild);
   seg('c-pas', 'pas', [['belka', 'biała belka z ząbkami'], ['deski', 'ząbki na końcach desek']], rebuild);
   seg('c-szyby', 'szyby', [['wariant', 'jak w wariancie'], ['2', '2: kwadrat u góry'], ['3', '3'], ['6', '6'], ['1', '1']], rebuild);
+  seg('c-op', 'op', [['listwa', 'biała listwa + białe parapety'], ['opaski', 'białe opaski, sosnowe parapety']], rebuild);
   seg('c-bok', 'bok', [['86', 'szerokie 86,5'], ['40', 'wąskie 40']], rebuild);
   seg('c-trs', 'trs', [['nie', 'bez'], ['tak', 'pasek nad oknami i drzwiami']], rebuild);
   seg('c-depth', 'depth', [[150, '150 z zewnątrz'], [170, '170 z zewnątrz']], rebuild);
