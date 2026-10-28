@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ganek Leńcze</title>
+<style>
+:root{--bg:#f6f3ee;--ink:#2b2622;--mut:#6f665d;--card:#fff;--line:#e3ddd3;--acc:#8a5a2b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:26px;margin:0 0 4px}
+h2{font-size:19px;margin:34px 0 10px}
+h3{margin:2px 0 6px;font-size:16px}
+.sub{color:var(--mut);margin:0 0 16px}
+.ctrl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;position:sticky;top:0;z-index:5;box-shadow:0 2px 8px #0000000d}
+.ctrl span.l{font-weight:600;margin-right:8px;font-size:14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-right:1px solid var(--line);background:#fff;padding:6px 11px;cursor:pointer;font:inherit;font-size:14px;color:var(--ink)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--acc);color:#fff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.card.sel{outline:2px solid var(--acc)}
+.card p{margin:4px 0 0;color:var(--mut);font-size:14px}
+svg{width:100%;height:auto;display:block}
+.det{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;margin-top:10px}
+.stack{display:grid;gap:14px}
+ul{margin:6px 0 0;padding-left:20px}
+li{margin:2px 0}
+.note{font-size:14px;color:var(--mut)}
+ul.note{margin-top:0}
+.k{display:inline-block;min-width:22px;padding:0 6px;border-radius:5px;background:#efe6da;font-weight:600;text-align:center}
+@media(max-width:860px){.grid,.det{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="gl" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#e4eef3"/><stop offset="0.55" stop-color="#a9c0cd"/><stop offset="1" stop-color="#7f9aab"/>
+    </linearGradient>
+    <pattern id="corr" width="9" height="10" patternUnits="userSpaceOnUse">
+      <rect width="9" height="10" fill="none"/><rect x="0" width="2.2" height="10" fill="#00000026"/>
+    </pattern>
+    <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="8" height="8" fill="#efe3d0"/><rect width="1.5" height="8" fill="#c9a77a"/>
+    </pattern>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <h1>Ganek · Leńcze</h1>
+  <p class="sub"><a href="ganek-3d.html" style="color:var(--acc);font-weight:600">Model 3D do obracania →</a></p>
+  <p class="sub">Szkic proporcji w skali na podstawie pomiarów z 28.10.2026 i projektu z 2022 r. Służy do wyczucia bryły, nie jest projektem wykonawczym.</p>
+
+  <div class="ctrl">
+    <div><span class="l">Okap ganku</span><span class="seg" id="c-eave"></span></div>
+    <div><span class="l">Kąt dachu ganku</span><span class="seg" id="c-pitch"></span></div>
+    <div><span class="l">Wykończenie</span><span class="seg" id="c-fin"></span></div>
+    <div><span class="l">Pod szczytem</span><span class="seg" id="c-pas"></span></div>
+    <div><span class="l">Pasek naświetli nad oknami i drzwiami</span><span class="seg" id="c-trs"></span></div>
+    <div id="c-v-bar" hidden><span class="l">Wariant</span><span class="seg" id="c-v2"></span></div>
+  </div>
+
+  <h2>Cała elewacja: dziś i warianty</h2>
+  <div class="grid" id="multi"></div>
+
+  <h2>Wariant w zbliżeniu</h2>
+  <div class="ctrl" id="c-v-box" style="position:static"><div><span class="l">Wariant</span><span class="seg" id="c-v"></span></div></div>
+  <div class="det">
+    <div class="card"><h3>Front ganku</h3><div id="d-front"></div></div>
+    <div class="stack">
+      <div class="card"><h3>Rzut (widok z góry)</h3><div id="d-plan"></div></div>
+      <div class="card"><h3>Bok prawy</h3><div id="d-side"></div></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px" id="d-info"></div>
+
+  <h2>Wysokość dachu ganku i rynny</h2>
+  <div class="card">
+    <ul>
+      <li><b>Na linii rynny domu (domyślnie).</b> Okap ganku leży na tej samej wysokości co krawędź dachu domu, więc rynna domu dochodzi do ganku, skręca pod kątem prostym i biegnie wzdłuż boku ganku do rury spustowej w przednim narożniku. Tak robi się typowe przecięcie dwóch dachów: jedna linia okapu, jedna rynna dookoła, kosze (rynny koszowe) w miejscu, gdzie dach ganku wchodzi w połać domu, i woda z koszy spływa do tej samej rynny. Rozwiązuje się też drugi problem: lewa część rynny domu nie ma dziś rury spustowej, a tak dostaje ją w lewym narożniku ganku.</li>
+      <li><b>50 cm wyżej (projekt 2022).</b> Dach ganku leży nad istniejącym okapem, więc nie trzeba ciąć końcówek krokwi domu. Za to ganek ma osobne rynny 30 cm nad rynną domu, a rynnę domu trzeba w tym miejscu przerwać i dołożyć zaślepki i dodatkowy spust. Kalenica jest wyżej, więc kąt dachu nie może przekroczyć 35°.</li>
+      <li><b>Sufit w środku</b> w obu wersjach może być na wysokości podbitki domu: 235 cm nad podłogą ganku. W wersji „na linii rynny” okap domu (wysięg około 45 cm) wchodzi do wnętrza ganku i trzeba go w tej szerokości przyciąć albo zabudować w suficie. To robota dla cieśli przy montażu więźby, ale normalna.</li>
+      <li><b>Do domierzenia:</b> wysokość górnej krawędzi rynny domu (przyjąłem 284 cm nad terenem) i wysięg okapu od ściany (przyjąłem 45 cm).</li>
+    </ul>
+  </div>
+
+  <h2>Co sprawi, że ganek nie będzie wyglądał jak doklejona buda</h2>
+  <div class="card">
+    <ul>
+      <li><b>Ten sam język co dom.</b> Blacha w kolorze dachu, a wiatrownice i opaski białe jak opaski okna i drzwi (przełącznik „sosna + białe opaski”). Ganek z samej surowej sosny na niebieskim domu to najkrótsza droga do efektu budy.</li>
+      <li><b>Dach ganku wchodzi w połać domu</b>, a nie stoi pod okapem. Okap ganku na linii rynny domu daje jedną ciągłą linię okapu, jakby ganek był od zawsze. Niższy daszek pod rynną wyglądałby jak przybudówka.</li>
+      <li><b>Kąt dachu.</b> 35° jest najbliżej kąta dachu domu (około 36°) i daje spójną bryłę. 40° daje stromszy, bardziej wiejski szczyt. Kalenica ganku i tak zostaje wyraźnie poniżej kalenicy domu (około 5,8 m).</li>
+      <li><b>Powtórzony detal.</b> Ażurowa listwa pod szczytem ganku może powtarzać wycinankę spod istniejącego okna. To tani zabieg, który wiąże obie części.</li>
+      <li><b>Długi front z jednym oknem</b> po dodaniu ganku ma środek ciężkości po lewej. Jeśli kiedyś będziecie wymieniać lub dodawać okno, prawa połowa elewacji jest naturalnym miejscem. Na razie to tylko obserwacja.</li>
+    </ul>
+  </div>
+
+  <h2>Założenia i co jest szacowane</h2>
+  <div class="card note">
+    <ul>
+      <li><b>Zmierzone:</b> elewacja 521 + drzwi + 850 cm, okap 263–266 cm nad terenem, drzwi 112 × 204, od opaski drzwi do opaski okna 207 cm, podest 195 cm szeroki, około 30 cm wysoki.</li>
+      <li><b>Od Was:</b> deski pionowe tylko do wysokości parapetu (85 cm nad podłogą ganku), wyżej poziome jak na domu, szczyt z desek pionowych.</li>
+      <li><b>Od Was (wymiary):</b> ganek szeroki 412 z zewnątrz, 352 wewnątrz (po 30 cm konstrukcji na bok), głęboki 150 (wewnątrz 140), szafa 60 przy lewej ścianie, drzwi na środku frontu, prawy bok z oknem 100.</li>
+      <li><b>Z projektu 2022:</b> podłoga ganku na wysokości podestu (30), pas pełny 85, przeszklenie do wysokości okapu, oczep 50 nad okapem.</li>
+      <li><b>Szacowane ze zdjęć (do potwierdzenia):</b> opaska drzwi 15 cm (stąd elewacja 1513 cm), okno domu około 130 × 115. Dach domu jest dwuspadowy (szczyty po bokach), około 36°, kalenica około 5,8 m, głębokość domu około 7,3 m: to szacunek ze zdjęcia szczytu. Jeśli znacie głębokość domu albo wysokość kalenicy, poprawię.</li>
+      <li>Ganek stoi osiowo na istniejących drzwiach. Prawa ściana ganku wypada około 70 cm przed opaską okna domu, a okap ganku około 35 cm przed nią.</li>
+      <li>Sylwetka obok ganku ma 175 cm wzrostu, dla skali.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+const T = 620, y = v => T - v, n = v => Math.round(v * 10) / 10;
+const fmt = v => String(n(v)).replace('.', ',');
+const st = { v: 'A', pitch: 35, fin: 'biel', gw: 'kapliczka', pas: 'belka', trs: 'nie', eave: 'rynna' };
+
+const HOUSE = { edge: 284, ridge: 580, pitch: 36, len: 1513, blue: '#a9c6e8', line: '#93b2d9', trim: '#f5f2ea', roof: '#6c2535', gutter: '#4a3027', fascia: '#7a2e2a' };
+const G = { x0: 386, x1: 798, xc: 592, W: 412, wall: 30, D: 150, plate: 315, ov: 35, t: 22 };
+
+const PAL = {
+  sosna: { board: '#d8a868', boardLine: '#bb8c4f', post: '#b77d40', beam: '#a86f36', wiatr: '#a86f36', frame: '#a96f34', dark: '#83552a', leaf: '#c99355', sill: '#9b6530', gable: '#cf9d5e' },
+  biel:  { board: '#d8a868', boardLine: '#bb8c4f', post: '#f4f0e7', beam: '#f4f0e7', wiatr: '#f4f0e7', frame: '#a96f34', dark: '#83552a', leaf: '#c99355', sill: '#f4f0e7', gable: '#cf9d5e' },
+  nieb:  { board: '#a9c6e8', boardLine: '#93b2d9', post: '#f4f0e7', beam: '#f4f0e7', wiatr: '#f4f0e7', frame: '#a96f34', dark: '#83552a', leaf: '#c99355', sill: '#f4f0e7', gable: '#a9c6e8' },
+  niebb: { board: '#a9c6e8', boardLine: '#93b2d9', post: '#f4f0e7', beam: '#f4f0e7', wiatr: '#f4f0e7', frame: '#f6f3ec', dark: '#a39d92', leaf: '#efebe3', sill: '#f4f0e7', gable: '#a9c6e8' },
+};
+
+// Front items: t=win|door|rail, x/w in facade cm, yb/h from ground (floor of porch = 30)
+// Order: symmetric from narrowest to widest windows, asymmetric last.
+// Side window (right wall) is always the largest catalog size that fits: 865 x 1175, 6 panes.
+const DOOR = { t: 'door', x: 532, w: 120, yb: 30, h: 210, asym: 1 };
+const SIDE = [{ t: 'win', x: 146.75, w: 86.5, yb: 122.5, h: 117.5, c: 2, r: 3 }];
+const BUDGET_NOTE = 'Budżet to szacunek na oko: ceny brutto z VAT, bez montażu, sosna, szyba zespolona, szprosy. Drzwi u stolarza mają największy rozrzut.';
+const order = (rows, sum) => `<p class="note"><b>Do zamówienia</b> (szer. × wys. w cm):</p><ul class="note">${rows.map(r => `<li>${r}</li>`).join('')}</ul><p class="note"><b>Razem okna + drzwi: ${sum}</b>. ${BUDGET_NOTE}</p>`;
+const ROW_SIDE = 'prawy bok: okno <b>86,5 × 117,5</b> (katalogowe 865 × 1175), 6 szyb · 2 200–3 200 zł';
+const ROW_DOOR = 'drzwi <b>120 × 210</b> dwuskrzydłowe 80 + 40 według Waszego wzoru, u stolarza · 9 000–15 000 zł';
+const V = {
+  A: {
+    name: 'A · Dwa okna 40, 3 szyby', short: 'drzwi 120, dwa wąskie okna 40 po 3 szyby',
+    front: [
+      { t: 'win', x: 482, w: 40, yb: 122.5, h: 117.5, c: 1, r: 3 },
+      DOOR,
+      { t: 'win', x: 662, w: 40, yb: 122.5, h: 117.5, c: 1, r: 3 },
+    ],
+    posts: [], side: SIDE,
+    info: `<h3>A · Dwa okna 40, 3 szyby</h3>
+      <ul>
+        <li>Drzwi 120 na środku, po bokach wąskie okna 40 × 117,5 na 3 szyby jedna nad drugą, 10 cm od drzwi. Szafa 60 mieści się bez kolizji. Prawy bok: okno 86,5 na 6 szyb. Lewy bok pełny.</li>
+        <li><b>Plus:</b> symetryczny front, najwięcej pełnej ściany. <b>Minus:</b> okna 40 czytają się raczej jak doświetla przy drzwiach niż okna.</li>
+      </ul>
+      ${order(['front: 2 × okno <b>40 × 117,5</b>, 3 szyby, nietypowe (u stolarza) · 2 × 1 500–2 300 zł', ROW_SIDE, ROW_DOOR], 'około 14–23 tys. zł')}`
+  },
+  B: {
+    name: 'B · Dwa okna 40, 2 szyby', short: 'jak A, okna na 2 szyby: duża tafla i górny pas',
+    front: [
+      { t: 'win', x: 482, w: 40, yb: 122.5, h: 117.5, c: 1, r: 1, top: { h: 40, c: 1 } },
+      DOOR,
+      { t: 'win', x: 662, w: 40, yb: 122.5, h: 117.5, c: 1, r: 1, top: { h: 40, c: 1 } },
+    ],
+    posts: [], side: SIDE,
+    info: `<h3>B · Dwa okna 40, 2 szyby</h3>
+      <ul>
+        <li>Układ jak w A, ale okna frontowe mają 2 szyby: dużą taflę na dole i niski pas u góry, oddzielone jednym poziomym szprosem na tej samej wysokości w obu oknach. Prawy bok: okno 86,5 na 6 szyb.</li>
+        <li><b>Plus:</b> lepszy widok z wnętrza, łatwiejsze mycie, prostsza stolarka. <b>Minus:</b> mniej „wiejsko” niż okna z szprosami.</li>
+      </ul>
+      ${order(['front: 2 × okno <b>40 × 117,5</b>, 2 szyby, nietypowe (u stolarza) · 2 × 1 400–2 100 zł', ROW_SIDE, ROW_DOOR], 'około 14–22,5 tys. zł')}`
+  },
+  F: {
+    name: 'F · Dwa okna katalogowe 56,5', short: 'drzwi 120 i dwa okna 56,5 × 117,5, szafa węższa o 10',
+    front: [
+      { t: 'win', x: 465.5, w: 56.5, yb: 122.5, h: 117.5, c: 2, r: 3 },
+      DOOR,
+      { t: 'win', x: 662, w: 56.5, yb: 122.5, h: 117.5, c: 2, r: 3 },
+    ],
+    posts: [], wardrobe: 50, side: SIDE,
+    info: `<h3>F · Dwa okna katalogowe 56,5</h3>
+      <ul>
+        <li>Drzwi 120 na środku, po obu stronach okno 56,5 × 117,5 na 6 szyb, 10 cm od drzwi, symetrycznie. Prawy bok: okno 86,5 na 6 szyb.</li>
+        <li>Okno od strony szafy (z lewej patrząc z zewnątrz, z prawej patrząc od środka) zachodzi na szafę 60 o 10 cm, dlatego <b>szafa ma 50 zamiast 60</b>. Na rzucie przerywana linia pokazuje dawną szerokość. Większe okno katalogowe, 86,5, już się nie zmieści: szafa mogłaby mieć wtedy najwyżej 20 cm.</li>
+        <li><b>Plus:</b> wszystkie okna z katalogu, front symetryczny i jaśniejszy niż w A. <b>Minus:</b> szafa traci 10 cm.</li>
+      </ul>
+      ${order(['front: 2 × okno <b>56,5 × 117,5</b> (katalogowe 565 × 1175), 6 szyb · 2 × 1 700–2 500 zł', ROW_SIDE, ROW_DOOR], 'około 14,5–23 tys. zł')}`
+  },
+  E: {
+    name: 'E · Asymetria: jedno okno 86,5', short: 'lewa część pełna (szafa), z prawej okno 86,5 katalogowe',
+    front: [
+      DOOR,
+      { t: 'win', x: 662, w: 86.5, yb: 122.5, h: 117.5, c: 2, r: 3 },
+    ],
+    posts: [], side: SIDE,
+    info: `<h3>E · Asymetria: jedno okno 86,5</h3>
+      <ul>
+        <li>Z lewej, za szafą, front jest pełny. Z prawej, gdzie szafy nie ma, jedno okno 86,5 × 117,5 na 6 szyb, takie samo jak na prawym boku.</li>
+        <li><b>Plus:</b> tylko jeden typ okna (2 sztuki z katalogu), najtaniej, a okno ganku rymuje się z oknem domu. <b>Minus:</b> front niesymetryczny.</li>
+      </ul>
+      ${order(['front i prawy bok: 2 × okno <b>86,5 × 117,5</b> (katalogowe 865 × 1175), 6 szyb · 2 × 2 200–3 200 zł', ROW_DOOR], 'około 13,5–21,5 tys. zł')}`
+  },
+  A2: {
+    name: 'A2 · Asymetria: okna 40 i 100', short: 'z lewej okno 40 na 3 szyby, z prawej szerokie 100 na 6 szyb',
+    front: [
+      { t: 'win', x: 482, w: 40, yb: 122.5, h: 117.5, c: 1, r: 3 },
+      DOOR,
+      { t: 'win', x: 662, w: 100, yb: 122.5, h: 117.5, c: 2, r: 3 },
+    ],
+    posts: [], side: SIDE,
+    info: `<h3>A2 · Asymetria: okna 40 i 100</h3>
+      <ul>
+        <li>Drzwi 120 na środku, z lewej okno 40 × 117,5 na 3 szyby, z prawej okno 100 × 117,5 na 6 szyb. To najszersze okno, jakie się zmieści: kończy się 6 cm przed wewnętrzną stroną prawej ściany. Prawy bok: okno 86,5 na 6 szyb.</li>
+        <li><b>Plus:</b> najwięcej światła z prawej, gdzie nie ma szafy. <b>Minus:</b> front wyraźnie asymetryczny, a okno 100 nie jest katalogowe.</li>
+      </ul>
+      ${order(['front z lewej: okno <b>40 × 117,5</b>, 3 szyby, nietypowe (u stolarza) · 1 500–2 300 zł', 'front z prawej: okno <b>100 × 117,5</b>, 6 szyb, nietypowe (u stolarza) · 2 600–3 600 zł', ROW_SIDE, ROW_DOOR], 'około 15–24 tys. zł')}`
+  },
+};
+
+// Optional transom strip: openings keep their size (heads at 240), no rail; a fixed transom
+// sits directly on every opening, up to the inside ceiling (265) but clear of the gable teeth.
+const TR = { head: 240, top: 265 };
+const trCols = w => Math.max(2, Math.round(w / 35));
+const trTop = () => Math.min(TR.top, roofGeom().plate - (st.pas === 'belka' ? 23 : 15));
+function withTr(list) {
+  const tr = list.filter(o => o.t === 'door' || o.t === 'win').map(o =>
+    ({ t: 'win', x: o.x, w: o.w, yb: TR.head, h: trTop() - TR.head, c: trCols(o.w), r: 1, tr: 1 }));
+  return [...list, ...tr];
+}
+const VV = k => {
+  const v = V[k];
+  if (!v || st.trs !== 'tak') return v;
+  return { ...v, front: withTr(v.front), side: withTr(v.side) };
+};
+function trInfo(k) {
+  if (st.trs !== 'tak') return '';
+  const n = V[k].front.length + V[k].side.length, h = trTop() - TR.head;
+  const tight = h < 24 ? ` Przy białej belce i dachu ${st.pitch}° ząbki belki schodzą nisko, więc naświetle ma tylko ${fmt(h)} cm. Z ząbkami na końcach desek albo przy dachu 40° będzie miało około 25 cm.` : '';
+  return `<p class="note" style="background:#f3ece2;border-radius:6px;padding:6px 10px"><b>Włączony pasek naświetli:</b> okna i drzwi zostają w pełnej wysokości, a nad każdym otworem stoi naświetle stałe <b>${fmt(h)} cm</b> wysokości, aż do sufitu ganku (265 nad terenem, wyżej się nie da, bo tam jest sufit).${tight} Okno z naświetlem można zamówić jako jedną ramę: 117,5 + ${fmt(h)} daje około ${fmt(117.5 + h)} cm, blisko katalogowej wysokości 143,5. Razem ${n} naświetli, około ${n * 600}–${n * 1000} zł więcej niż w budżecie poniżej (szacunek na oko).</p>`;
+}
+
+function R(b, x, yb, w, h, fill, stroke, sw) {
+  b.push(`<rect x="${n(x)}" y="${n(y(yb + h))}" width="${n(w)}" height="${n(h)}" fill="${fill}"${stroke ? ` stroke="${stroke}" stroke-width="${sw || 1}"` : ''}/>`);
+}
+function P(b, pts, fill, stroke, sw) {
+  b.push(`<polygon points="${pts.map(p => n(p[0]) + ',' + n(y(p[1]))).join(' ')}" fill="${fill}"${stroke ? ` stroke="${stroke}" stroke-width="${sw || 1}"` : ''}/>`);
+}
+function L(b, x1, y1, x2, y2, stroke, sw) {
+  b.push(`<line x1="${n(x1)}" y1="${n(y(y1))}" x2="${n(x2)}" y2="${n(y(y2))}" stroke="${stroke}" stroke-width="${sw || 1}"/>`);
+}
+function TX(b, x, yy, s, size, anchor, fill) {
+  b.push(`<text x="${n(x)}" y="${n(y(yy))}" font-size="${size || 14}" text-anchor="${anchor || 'middle'}" fill="${fill || '#4a423b'}" font-family="-apple-system,system-ui,sans-serif">${s}</text>`);
+}
+
+function glass(b, x, yb, w, h, c, r, top, p) {
+  let mh = h;
+  if (top) {
+    const ty = yb + h - top.h;
+    R(b, x, ty, w, top.h, 'url(#gl)');
+    for (let i = 1; i < top.c; i++) R(b, x + i * w / top.c - 1.5, ty, 3, top.h, p.frame);
+    R(b, x, ty - 4, w, 4, p.frame);
+    mh = h - top.h - 4;
+  }
+  R(b, x, yb, w, mh, 'url(#gl)');
+  for (let i = 1; i < c; i++) R(b, x + i * w / c - 1.5, yb, 3, mh, p.frame);
+  for (let j = 1; j < r; j++) R(b, x, yb + j * mh / r - 1.5, w, 3, p.frame);
+}
+function win(b, o, p, x) {
+  x = x ?? o.x;
+  R(b, x, o.yb, o.w, o.h, p.frame, p.dark, 0.8);
+  const f = o.tr ? 4 : 6;
+  glass(b, x + f, o.yb + f, o.w - 2 * f, o.h - 2 * f, o.c, o.r, o.top, p);
+  if (!o.tr && o.yb > 40) R(b, x - 5, o.yb - 5, o.w + 10, 5, p.sill, p.dark, 0.5);
+}
+function doorAsym(b, o, p) {
+  const { x, yb, w, h } = o, f = 6, inner = w - 2 * f, nw = inner / 3, ww = inner - nw;
+  R(b, x, yb, w, h, p.frame, p.dark, 0.8);
+  [[x + f, nw, 1], [x + f + nw, ww, 2]].forEach(([lx, lw, cols], i) => {
+    R(b, lx + 0.8, yb, lw - 1.6, h - f, p.leaf, p.dark, 0.8);
+    const gx = lx + 7, gw = lw - 14, gb = yb + h * 0.42, gh = h - f - 8 - h * 0.42;
+    glass(b, gx, gb, gw, gh, cols, 3, null, p);
+    if (i === 0) R(b, gx + 2, gb - 12, gw - 4, 5, p.dark);
+    R(b, gx, yb + 12, gw, h * 0.42 - 30, 'none', p.dark, 1.2);
+    R(b, gx + 5, yb + 17, gw - 10, h * 0.42 - 40, 'none', p.dark, 0.6);
+  });
+  R(b, x + f + nw + 5, yb + 95, 3, 14, '#3b3330');
+}
+function doorSingle(b, o, p) {
+  const { x, yb, w, h } = o, f = 6, lw = w - 2 * f, gx = x + f + 7, gw = lw - 14;
+  R(b, x, yb, w, h, p.frame, p.dark, 0.8);
+  R(b, x + f + 0.8, yb, lw - 1.6, h - f, p.leaf, p.dark, 0.8);
+  glass(b, gx, yb + h * 0.42, gw, h - f - 8 - h * 0.42, 2, 3, null, p);
+  R(b, gx, yb + 12, gw, h * 0.42 - 30, 'none', p.dark, 1.2);
+  R(b, gx + 5, yb + 17, gw - 10, h * 0.42 - 40, 'none', p.dark, 0.6);
+  R(b, x + w - 16, yb + 95, 3, 14, '#3b3330');
+}
+function door(b, o, p) {
+  if (o.asym) return doorAsym(b, o, p);
+  if (o.single) return doorSingle(b, o, p);
+  const { x, yb, w, h } = o, f = 6, leaves = w >= 100 ? 2 : 1, lw = (w - 2 * f) / leaves;
+  R(b, x, yb, w, h, p.frame, p.dark, 0.8);
+  for (let i = 0; i < leaves; i++) {
+    const lx = x + f + i * lw;
+    R(b, lx + 0.8, yb, lw - 1.6, h - f, p.leaf, p.dark, 0.8);
+    const gx = lx + 8, gw = lw - 16, split = h * 0.46;
+    glass(b, gx, yb + split, gw, h - f - 10 - split, o.gc, o.gr, o.top, p);
+    R(b, gx, yb + 14, gw, split - 28, 'none', p.dark, 1.2);
+    R(b, gx + 6, yb + 20, gw - 12, split - 40, 'none', p.dark, 0.6);
+  }
+  const hx = leaves === 2 ? x + w / 2 - 9 : x + w - 16;
+  R(b, hx, yb + 98, 3, 16, '#3b3330');
+}
+
+function house(b, today) {
+  const len = HOUSE.len, eave = 282, ridge = HOUSE.ridge;
+  const roof = [[-45, eave], [-45, ridge], [len + 45, ridge], [len + 45, eave]];
+  P(b, roof, HOUSE.roof); P(b, roof, 'url(#corr)');
+  [[548, 530, 625], [766, 530, 620]].forEach(([cx, b0, top]) => {
+    R(b, cx, b0, 40, top - b0, '#9c4a3c', '#6e3128', 0.8); R(b, cx - 4, top, 48, 7, '#7d3a30');
+  });
+  R(b, 1290, 545, 9, 50, '#7d3a30');
+  R(b, 0, 10, len, 258, HOUSE.blue);
+  for (let yy = 24; yy < 266; yy += 14) L(b, 0, yy, len, yy, HOUSE.line, 1.2);
+  R(b, 0, 0, len, 10, '#7c6a5a');
+  R(b, 0, 10, 12, 258, HOUSE.trim); R(b, len - 12, 10, 12, 258, HOUSE.trim);
+  R(b, -45, 265, len + 90, 5, '#bcd2ec');
+  R(b, -45, 270, len + 90, 12, HOUSE.fascia);
+  R(b, -52, 274, len + 104, 10, HOUSE.gutter);
+  R(b, len + 6, 0, 9, 278, HOUSE.gutter);
+  // existing window (estimated size)
+  R(b, 870, 110, 160, 148, HOUSE.trim, '#d8d2c6', 0.8);
+  R(b, 885, 125, 130, 118, '#a96f34', '#83552a', 0.8);
+  [889, 952].forEach(sx => { R(b, sx, 129, 59, 110, '#b77d40'); R(b, sx + 6, 135, 47, 98, 'url(#gl)'); });
+  R(b, 862, 104, 176, 8, HOUSE.trim, '#d8d2c6', 0.6);
+  for (let sx = 868; sx < 1034; sx += 16) b.push(`<path d="M${sx} ${y(104)} a8 8 0 0 0 16 0z" fill="${HOUSE.trim}" stroke="#d8d2c6" stroke-width="0.6"/>`);
+  if (today) {
+    R(b, 494.5, 0, 195, 30, '#c9c4ba', '#a9a399', 0.8);
+    R(b, 521, 30, 142, 219, HOUSE.trim, '#d8d2c6', 0.8);
+    const p = PAL.sosna;
+    door(b, { x: 536, yb: 30, w: 112, h: 204, gc: 1, gr: 1 }, p);
+  }
+}
+
+function person(b, x) {
+  const c = '#4d4741', o = 'fill-opacity="0.55"';
+  b.push(`<g ${o} fill="${c}"><circle cx="${x}" cy="${y(163)}" r="11"/>` +
+    `<rect x="${x - 17}" y="${y(150)}" width="34" height="62" rx="8"/>` +
+    `<rect x="${x - 15}" y="${y(92)}" width="12" height="92" rx="5"/>` +
+    `<rect x="${x + 3}" y="${y(92)}" width="12" height="92" rx="5"/>` +
+    `<rect x="${x - 25}" y="${y(146)}" width="8" height="62" rx="4"/>` +
+    `<rect x="${x + 17}" y="${y(146)}" width="8" height="62" rx="4"/></g>`);
+}
+
+function roofGeom() {
+  const tan = Math.tan(st.pitch * Math.PI / 180);
+  const plate = st.eave === 'rynna' ? HOUSE.edge - G.t + G.ov * tan : 315;
+  const eY = plate + G.t - G.ov * tan, rY = eY + (G.W / 2 + G.ov) * tan;
+  return { tan, eY, rY, plate };
+}
+
+// vertical boards up to sill level (floor + 85), horizontal above like the house siding
+const SILL = 115;
+function boards(b, xa, xb, p, top) {
+  for (let x = xa + 11; x < xb; x += 11) L(b, x, 30, x, SILL, p.boardLine, 1);
+  for (let yy = SILL + 14; yy < top; yy += 14) L(b, xa, yy, xb, yy, p.boardLine, 1.1);
+  R(b, xa, SILL - 3, xb - xa, 6, p.post, p.dark, 0.4);
+}
+
+// arched-top rectangle as an SVG path (y measured up from the ground)
+function archPath(cx, yb, w, h) {
+  const r = w / 2, yt = yb + h - r;
+  return `M${n(cx - r)} ${n(y(yb))} L${n(cx - r)} ${n(y(yt))} A${n(r)} ${n(r)} 0 0 1 ${n(cx + r)} ${n(y(yt))} L${n(cx + r)} ${n(y(yb))} Z`;
+}
+// glazed niche in the gable with a standing folk figure of Our Lady in a blue mantle
+function kapliczka(b, cx, yb, gh, p) {
+  const w = 34, h = Math.min(58, gh * 0.42), s = h * 0.8 / 40, base = yb + 2;
+  R(b, cx - w / 2 - 9, yb - 9, w + 18, 5, p.wiatr, p.dark, 0.6);
+  b.push(`<path d="${archPath(cx, yb - 4, w + 12, h + 10)}" fill="${p.wiatr}" stroke="${p.dark}" stroke-width="0.8"/>`);
+  b.push(`<path d="${archPath(cx, yb, w, h)}" fill="#dfe8f4"/>`);
+  R(b, cx - 7 * s, base - 2, 14 * s, 3, '#d8cdbb');
+  b.push(`<circle cx="${n(cx)}" cy="${n(y(base + 33 * s))}" r="${n(6.2 * s)}" fill="none" stroke="#d6b04a" stroke-width="${n(1.3 * s)}"/>`);
+  P(b, [[cx - 10 * s, base], [cx + 10 * s, base], [cx + 6.5 * s, base + 25 * s], [cx + 5 * s, base + 34 * s], [cx, base + 38.5 * s], [cx - 5 * s, base + 34 * s], [cx - 6.5 * s, base + 25 * s]], '#3d6db5');
+  P(b, [[cx - 3 * s, base], [cx + 3 * s, base], [cx + 2 * s, base + 26 * s], [cx - 2 * s, base + 26 * s]], '#f5f2ea');
+  b.push(`<circle cx="${n(cx)}" cy="${n(y(base + 32.5 * s))}" r="${n(3.1 * s)}" fill="#f0d6bd"/>`);
+  b.push(`<circle cx="${n(cx)}" cy="${n(y(base + 22 * s))}" r="${n(1.7 * s)}" fill="#f0d6bd"/>`);
+  b.push(`<path d="${archPath(cx, yb, w, h)}" fill="url(#gl)" fill-opacity="0.28"/>`);
+}
+
+function ganekFront(b, v) {
+  const p = PAL[st.fin], { x0, x1, xc, W, ov, t } = G, { tan, eY, rY, plate } = roofGeom(), ph = plate - 45;
+  R(b, x0 - 4, 0, W + 8, 30, '#a8a196', '#8e887e', 0.8);
+  L(b, x0 - 4, 15, x1 + 4, 15, '#8e887e', 0.8);
+  R(b, x0, 30, W, plate - 30, p.board);
+  boards(b, x0, x1, p, st.pas === 'belka' ? plate - 15 : plate);
+  v.front.forEach(o => {
+    if (o.t === 'door') door(b, o, p);
+    else if (o.t === 'rail') R(b, x0, o.yb, W, o.h, p.post, p.dark, 0.5);
+    else win(b, o, p);
+  });
+  R(b, x0, 30, 12, ph, p.post, p.dark, 0.5); R(b, x1 - 12, 30, 12, ph, p.post, p.dark, 0.5);
+  // gable
+  const gh = W / 2 * tan;
+  P(b, [[x0, plate], [xc, plate + gh], [x1, plate]], p.gable);
+  for (let x = x0 + 12; x < x1; x += 12) {
+    const top = plate + (W / 2 - Math.abs(x - xc)) * tan;
+    L(b, x, plate, x, top, p.boardLine, 1);
+  }
+  if (st.pas === 'belka') {
+    R(b, x0 - 6, plate - 15, W + 12, 15, p.beam, p.dark, 0.5);
+    for (let x = x0 - 6; x + 12 <= x1 + 6; x += 12) P(b, [[x, plate - 15], [x + 12, plate - 15], [x + 6, plate - 23]], p.beam, p.dark, 0.4);
+  } else {
+    // no beam: gable boards run past the plate and end in cut points over the wall boards
+    const tooth = (x, d) => [[x, plate], [x + 12, plate], [x + 12, plate - 8 - d], [x + 6, plate - 15 - d], [x, plate - 8 - d]];
+    for (let x = x0; x + 12 <= x1 + 0.1; x += 12) P(b, tooth(x, 4), '#00000026');
+    for (let x = x0; x + 12 <= x1 + 0.1; x += 12) P(b, tooth(x, 0), p.gable, p.dark, 0.6);
+  }
+  const cy = plate + gh * 0.42;
+  if (st.gw === 'romb') {
+    const s = Math.min(26, gh * 0.3);
+    P(b, [[xc, cy + s], [xc + s, cy], [xc, cy - s], [xc - s, cy]], p.frame, p.dark, 0.8);
+    P(b, [[xc, cy + s - 6], [xc + s - 6, cy], [xc, cy - s + 6], [xc - s + 6, cy]], 'url(#gl)');
+  } else if (st.gw === 'okrag') {
+    const r = Math.min(22, gh * 0.26);
+    b.push(`<circle cx="${xc}" cy="${n(y(cy))}" r="${n(r)}" fill="url(#gl)" stroke="${p.frame}" stroke-width="6"/>`);
+  } else if (st.gw === 'kapliczka') kapliczka(b, xc, plate + gh * 0.2, gh, p);
+  // roof edge: metal on top, barge board below
+  const A = [x0 - ov, eY], B = [xc, rY], C = [x1 + ov, eY];
+  P(b, [A, B, C, [C[0], eY - t], [xc, rY - t], [A[0], eY - t]], p.wiatr, p.dark, 0.6);
+  P(b, [A, B, C, [C[0], eY - 7], [xc, rY - 7], [A[0], eY - 7]], HOUSE.roof);
+  // porch gutters seen end-on at both eaves, downpipes at the front corners
+  [[x0 - ov - 4, -1], [x1 + ov + 4, 1]].forEach(([gx, d]) => {
+    b.push(`<path d="M${n(gx - 9)} ${n(y(eY - 8))} a9 9 0 0 0 18 0z" fill="${HOUSE.gutter}"/>`);
+    const px = d < 0 ? x0 - 14 : x1 + 6;
+    R(b, px, 0, 8, eY - 14, HOUSE.gutter);
+    b.push(`<path d="M${n(gx)} ${n(y(eY - 14))} L${n(px + 4)} ${n(y(eY - 40))}" stroke="${HOUSE.gutter}" stroke-width="8" fill="none"/>`);
+  });
+  // steps
+  const dc = 592;
+  R(b, dc - 80, 15, 160, 15, '#b0644a', '#8d4c37', 0.8);
+  R(b, dc - 92, 0, 184, 15, '#b0644a', '#8d4c37', 0.8);
+}
+
+function dimH(b, xa, xb, yy, label) {
+  L(b, xa, yy, xb, yy, '#6f665d', 1); L(b, xa, yy - 6, xa, yy + 6, '#6f665d', 1); L(b, xb, yy - 6, xb, yy + 6, '#6f665d', 1);
+  TX(b, (xa + xb) / 2, yy - 17, label, 14);
+}
+function dimV(b, x, ya, yb2, label, left) {
+  L(b, x, ya, x, yb2, '#6f665d', 1); L(b, x - 6, ya, x + 6, ya, '#6f665d', 1); L(b, x - 6, yb2, x + 6, yb2, '#6f665d', 1);
+  TX(b, left ? x - 8 : x + 8, (ya + yb2) / 2 - 5, label, 13, left ? 'end' : 'start');
+}
+
+function facade(vk, mode) {
+  const b = [];
+  b.push(`<rect x="-300" y="${y(0)}" width="2200" height="60" fill="#d5ccba"/>`);
+  house(b, !vk);
+  if (vk) ganekFront(b, VV(vk));
+  if (mode === 'clean') return `<svg viewBox="-80 -20 1690 660" xmlns="http://www.w3.org/2000/svg">${b.join('')}</svg>`;
+  if (mode === 'full') {
+    person(b, 300);
+    dimH(b, 0, HOUSE.len, -14, `elewacja około ${fmt(HOUSE.len)} cm`);
+    return `<svg viewBox="-80 -20 1690 680" xmlns="http://www.w3.org/2000/svg">${b.join('')}</svg>`;
+  }
+  if (mode === 'gclean') return `<svg viewBox="240 110 680 560" xmlns="http://www.w3.org/2000/svg">${b.join('')}</svg>`;
+  person(b, 300);
+  const { rY } = roofGeom();
+  dimH(b, G.x0, G.x1, -14, '412 (wewn. 352)');
+  dimV(b, 822, 30, 265, '235');
+  dimV(b, 362, 0, rY, `kalenica ${Math.round(rY)}`, true);
+  return `<svg viewBox="240 110 680 560" xmlns="http://www.w3.org/2000/svg">${b.join('')}</svg>`;
+}
+
+function sideView(vk) {
+  const b = [], p = PAL[st.fin], v = VV(vk), { eY, rY, plate } = roofGeom(), hTan = Math.tan(HOUSE.pitch * Math.PI / 180);
+  const fx = 100, hx = 250, xr = Math.min(205 + (rY - 282) / hTan, 640), xe = 205 + (eY - 282) / hTan;
+  b.push(`<rect x="-100" y="${y(0)}" width="900" height="60" fill="#d5ccba"/>`);
+  // house end beyond
+  P(b, [[205, 282], [640, 282 + 435 * hTan], [640, 282]], HOUSE.roof);
+  P(b, [[205, 282], [640, 282 + 435 * hTan], [640, 282]], 'url(#corr)');
+  R(b, hx, 10, 390, 258, HOUSE.blue);
+  for (let yy = 24; yy < 266; yy += 14) L(b, hx, yy, 640, yy, HOUSE.line, 1.2);
+  R(b, hx, 0, 390, 10, '#7c6a5a');
+  R(b, 205, 270, 435, 12, HOUSE.fascia);
+  // porch side
+  R(b, fx - 4, 0, 154, 30, '#a8a196', '#8e887e', 0.8);
+  R(b, fx, 30, 150, plate - 30, p.board);
+  boards(b, fx, hx, p, st.pas === 'belka' ? plate - 15 : plate);
+  v.side.forEach(o => o.t === 'rail' ? R(b, fx, o.yb, 150, o.h, p.post, p.dark, 0.5) : win(b, o, p));
+  const ph = plate - 45;
+  R(b, fx, 30, 12, ph, p.post, p.dark, 0.5); R(b, hx - 12, 30, 12, ph, p.post, p.dark, 0.5);
+  if (st.pas === 'belka') R(b, fx - 6, plate - 15, 156, 15, p.beam, p.dark, 0.5);
+  // roof slope seen from the side, running into the house roof
+  const roof = [[fx - G.ov, eY], [fx - G.ov, rY], [xr, rY], [Math.max(xe, hx), eY]];
+  P(b, roof, HOUSE.roof); P(b, roof, 'url(#corr)');
+  R(b, fx - G.ov, eY - G.t, hx - fx + G.ov, G.t - 7, p.wiatr, p.dark, 0.6);
+  // porch side gutter; on the gutter line it turns the corner into the house gutter
+  R(b, fx - G.ov - 4, eY - 19, (st.eave === 'rynna' ? 205 : hx) - fx + G.ov + 4, 11, HOUSE.gutter);
+  R(b, fx - 14, 0, 8, eY - 19, HOUSE.gutter);
+  TX(b, 445, 215, st.eave === 'rynna' ? 'rynna ganku łączy się z rynną domu' : 'rynna ganku 30 cm nad rynną domu', 13, 'middle', '#4a5f78');
+  R(b, fx - 92, 0, 92, 15, '#b0644a', '#8d4c37', 0.8);
+  R(b, fx - 62, 15, 62, 15, '#b0644a', '#8d4c37', 0.8);
+  dimH(b, fx, hx, -14, '150');
+  TX(b, 450, 150, 'ściana domu', 14, 'middle', '#4a5f78');
+  return `<svg viewBox="40 110 600 560" xmlns="http://www.w3.org/2000/svg">${b.join('')}</svg>`;
+}
+
+function plan(vk) {
+  const v = VV(vk), b = [], { x0, x1, W } = G, ink = '#4a423b';
+  const r = (x, yy, w, h, fill, s, sw) => b.push(`<rect x="${n(x)}" y="${n(yy)}" width="${n(w)}" height="${n(h)}" fill="${fill}"${s ? ` stroke="${s}" stroke-width="${sw || 1}"` : ''}/>`);
+  const t = (x, yy, s, size, a) => b.push(`<text x="${n(x)}" y="${n(yy)}" font-size="${size || 13}" text-anchor="${a || 'middle'}" fill="${ink}" font-family="-apple-system,system-ui,sans-serif">${s}</text>`);
+  r(330, -40, 540, 40, '#d9e3ef');
+  r(536, -40, 112, 40, '#fbf8f2');
+  t(592, -16, 'drzwi domu 112', 12);
+  r(x0, 0, W, 150, '#c9a172');
+  r(x0 + G.wall, 0, W - 2 * G.wall, 140, '#fbf8f2');
+  const sz = v.wardrobe || 60;
+  if (sz < 60) b.push(`<rect x="${x0 + G.wall}" y="4" width="60" height="132" fill="none" stroke="#a8865c" stroke-width="1" stroke-dasharray="4 3"/>`);
+  r(x0 + G.wall, 4, sz, 132, 'url(#hatch)', '#a8865c', 1);
+  t(x0 + G.wall + sz / 2, 74, 'szafa', 12); t(x0 + G.wall + sz / 2, 89, String(sz), 12);
+  if (sz < 60) t(x0 + G.wall + sz / 2, 104, '(było 60)', 10);
+  v.front.filter(o => o.t === 'door' || (o.t === 'win' && o.yb < 200 && o.h > 60)).forEach(o => {
+    r(o.x, 140, o.w, 10, '#fbf8f2');
+    if (o.t === 'win') { b.push(`<line x1="${o.x}" y1="143.5" x2="${o.x + o.w}" y2="143.5" stroke="${ink}" stroke-width="1"/><line x1="${o.x}" y1="146.5" x2="${o.x + o.w}" y2="146.5" stroke="${ink}" stroke-width="1"/>`); }
+    else {
+      const lv = o.asym ? 2 : 1, lws = o.asym ? [o.w / 3, o.w * 2 / 3] : [o.w];
+      for (let i = 0; i < lv; i++) {
+        const lw = lws[i], hx = i === 0 ? o.x : o.x + o.w, dir = i === 0 ? 1 : -1;
+        b.push(`<line x1="${hx}" y1="140" x2="${hx}" y2="${140 - lw}" stroke="${ink}" stroke-width="1.5"/>`);
+        b.push(`<path d="M${hx} ${140 - lw} A${lw} ${lw} 0 0 ${dir === 1 ? 1 : 0} ${hx + dir * lw} 140" fill="none" stroke="${ink}" stroke-width="0.8" stroke-dasharray="3 3"/>`);
+      }
+    }
+  });
+  const sw = v.side[0].w, s0 = 70 - sw / 2, s1 = 70 + sw / 2;
+  r(x1 - G.wall, s0, G.wall, sw, '#fbf8f2');
+  b.push(`<line x1="${x1 - 17}" y1="${s0}" x2="${x1 - 17}" y2="${s1}" stroke="${ink}"/><line x1="${x1 - 13}" y1="${s0}" x2="${x1 - 13}" y2="${s1}" stroke="${ink}"/>`);
+  r(512, 150, 160, 30, '#d7a28d', '#8d4c37', 0.8); r(500, 180, 184, 30, '#d7a28d', '#8d4c37', 0.8);
+  t(592, 200, 'schody 2 × 15', 12);
+  t(592, 236, 'zewn. 412 · wewn. 352', 14);
+  t(x1 + 14, 75, '150', 13, 'start'); t(x1 + 14, 92, '(140)', 12, 'start');
+  t(x1 + 14, 20, `okno ${fmt(v.side[0].w)}`, 12, 'start');
+  return `<svg viewBox="325 -50 560 300" xmlns="http://www.w3.org/2000/svg">${b.join('')}</svg>`;
+}
+
+function seg(id, key, opts) {
+  const el = document.getElementById(id);
+  el.innerHTML = opts.map(([v, l]) => `<button data-v="${v}" class="${String(st[key]) === String(v) ? 'on' : ''}">${l}</button>`).join('');
+  el.onclick = e => {
+    const btn = e.target.closest('button'); if (!btn) return;
+    st[key] = isNaN(+btn.dataset.v) ? btn.dataset.v : +btn.dataset.v;
+    render();
+  };
+}
+
+function render() {
+  seg('c-eave', 'eave', [['rynna', 'na linii rynny domu'], ['projekt', '50 cm wyżej (projekt 2022)']]);
+  seg('c-pitch', 'pitch', st.eave === 'rynna' ? [[30, '30°'], [35, '35° jak dom'], [40, '40° wiejski']] : [[30, '30°'], [33, '33°'], [35, '35° jak dom']]);
+  if (st.eave === 'projekt' && st.pitch > 35) st.pitch = 35;
+  seg('c-fin', 'fin', [['sosna', 'sama sosna'], ['biel', 'sosna + białe opaski'], ['nieb', 'niebieski jak dom'], ['niebb', 'niebieski + białe okna i drzwi']]);
+  seg('c-trs', 'trs', [['nie', 'bez'], ['tak', 'z paskiem']]);
+  seg('c-pas', 'pas', [['belka', 'biała belka z ząbkami'], ['deski', 'ząbki na końcach desek szczytu']]);
+  seg('c-v', 'v', Object.keys(V).map(k => [k, V[k].name]));
+  seg('c-v2', 'v', Object.keys(V).map(k => [k, V[k].name]));
+  const cards = [['', 'Dziś', 'bez ganku']].concat(Object.keys(V).map(k => [k, V[k].name, V[k].short]));
+  document.getElementById('multi').innerHTML = cards.map(([k, name, s]) =>
+    `<div class="card${k && k === st.v ? ' sel' : ''}" data-k="${k}" style="cursor:${k ? 'pointer' : 'default'}"><h3>${name}</h3>${facade(k, 'full')}<p>${s}</p></div>`).join('');
+  document.querySelectorAll('#multi .card[data-k]').forEach(c => c.onclick = () => { if (c.dataset.k) { st.v = c.dataset.k; render(); } });
+  document.getElementById('d-front').innerHTML = facade(st.v, 'ganek');
+  document.getElementById('d-plan').innerHTML = plan(st.v);
+  document.getElementById('d-side').innerHTML = sideView(st.v);
+  document.getElementById('d-info').innerHTML = trInfo(st.v) + V[st.v].info;
+}
+render();
+
+// variant picker joins the sticky bar once its own box is scrolled past
+const vBar = document.getElementById('c-v-bar'), vBox = document.getElementById('c-v-box'), topBar = vBar.parentElement;
+const syncBar = () => { vBar.hidden = vBox.getBoundingClientRect().bottom > topBar.offsetHeight; };
+addEventListener('scroll', syncBar, { passive: true }); addEventListener('resize', syncBar); syncBar();
+// export mode: ?ex=A&m=full|ganek&pitch=35&fin=biel renders a single drawing for PNG export
+(() => {
+  const q = new URLSearchParams(location.search); if (!q.get('ex')) return;
+  ['pitch', 'fin', 'gw', 'pas', 'eave', 'trs'].forEach(k => { if (q.get(k)) st[k] = isNaN(+q.get(k)) ? q.get(k) : +q.get(k); });
+  const k = q.get('ex') === 'dzis' ? '' : q.get('ex');
+  document.body.style.background = '#fff';
+  const defs = document.querySelector('svg defs').parentNode.outerHTML;
+  const m = q.get('m') || 'full';
+  document.body.innerHTML = defs + `<div style="width:100vw">${m === 'side' ? sideView(k) : facade(k, m)}</div>`;
+})();
+</script>
+</body>
+</html>

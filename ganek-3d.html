@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ganek 3D</title>
+<style>
+:root{--ink:#2b2622;--mut:#6f665d;--line:#e3ddd3;--acc:#8a5a2b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#cfe3f4;font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;color:var(--ink)}
+#c{position:fixed;inset:0;display:block;touch-action:none}
+.panel{position:fixed;left:12px;top:12px;max-width:min(560px,calc(100vw - 24px));background:#fffffff0;border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:0 4px 16px #0000001a}
+.panel h1{font-size:16px;margin:0 0 6px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:5px 0}
+.row .l{font-weight:600;min-width:84px;font-size:13px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;border-right:1px solid var(--line);background:#fff;padding:4px 9px;cursor:pointer;font:inherit;font-size:13px;color:var(--ink)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--acc);color:#fff}
+.hint{color:var(--mut);font-size:12px;margin-top:6px}
+#tog{position:fixed;right:12px;top:12px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;font:inherit}
+.panel.hide{display:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="panel" id="panel">
+  <h1>Ganek · model 3D</h1>
+  <div class="hint" style="margin:0 0 6px"><a href="ganek-warianty.html" style="color:var(--acc);font-weight:600">← Rysunki 2D, opisy i budżety</a></div>
+  <div class="row"><span class="l">Wariant</span><span class="seg" id="c-v"></span></div>
+  <div class="row"><span class="l">Widok</span><span class="seg" id="c-cam"></span></div>
+  <div class="row"><span class="l">Okap ganku</span><span class="seg" id="c-eave"></span></div>
+  <div class="row"><span class="l">Kąt dachu</span><span class="seg" id="c-pitch"></span></div>
+  <div class="row"><span class="l">Wykończenie</span><span class="seg" id="c-fin"></span></div>
+  <div class="row"><span class="l">Pod szczytem</span><span class="seg" id="c-pas"></span></div>
+  <div class="row"><span class="l">Naświetla</span><span class="seg" id="c-trs"></span></div>
+  <div class="row"><span class="l">Głębokość</span><span class="seg" id="c-depth"></span></div>
+  <div class="hint">Przeciągnij: obrót · Shift + przeciągnij lub prawy przycisk: przesunięcie · kółko lub dwa palce: zbliżenie. Wymiary w skali, dom według pomiarów i szacunków ze zdjęć.</div>
+</div>
+<button id="tog">ukryj panel</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ---- variant data copied from ganek-warianty.html (2D) ----
+// Order: symmetric from narrowest to widest windows, asymmetric last.
+// Side window (right wall) is always the largest catalog size that fits: 865 x 1175, 6 panes.
+const DOOR = { t: 'door', x: 532, w: 120, yb: 30, h: 210, asym: 1 };
+const SIDE = [{ t: 'win', x: 146.75, w: 86.5, yb: 122.5, h: 117.5, c: 2, r: 3 }];
+const BUDGET_NOTE = 'Budżet to szacunek na oko: ceny brutto z VAT, bez montażu, sosna, szyba zespolona, szprosy. Drzwi u stolarza mają największy rozrzut.';
+const order = (rows, sum) => `<p class="note"><b>Do zamówienia</b> (szer. × wys. w cm):</p><ul class="note">${rows.map(r => `<li>${r}</li>`).join('')}</ul><p class="note"><b>Razem okna + drzwi: ${sum}</b>. ${BUDGET_NOTE}</p>`;
+const ROW_SIDE = 'prawy bok: okno <b>86,5 × 117,5</b> (katalogowe 865 × 1175), 6 szyb · 2 200–3 200 zł';
+const ROW_DOOR = 'drzwi <b>120 × 210</b> dwuskrzydłowe 80 + 40 według Waszego wzoru, u stolarza · 9 000–15 000 zł';
+const V = {
+  A: {
+    name: 'A · Dwa okna 40, 3 szyby', short: 'drzwi 120, dwa wąskie okna 40 po 3 szyby',
+    front: [
+      { t: 'win', x: 482, w: 40, yb: 122.5, h: 117.5, c: 1, r: 3 },
+      DOOR,
+      { t: 'win', x: 662, w: 40, yb: 122.5, h: 117.5, c: 1, r: 3 },
+    ],
+    posts: [], side: SIDE,
+    info: `<h3>A · Dwa okna 40, 3 szyby</h3>
+      <ul>
+        <li>Drzwi 120 na środku, po bokach wąskie okna 40 × 117,5 na 3 szyby jedna nad drugą, 10 cm od drzwi. Szafa 60 mieści się bez kolizji. Prawy bok: okno 86,5 na 6 szyb. Lewy bok pełny.</li>
+        <li><b>Plus:</b> symetryczny front, najwięcej pełnej ściany. <b>Minus:</b> okna 40 czytają się raczej jak doświetla przy drzwiach niż okna.</li>
+      </ul>
+      ${order(['front: 2 × okno <b>40 × 117,5</b>, 3 szyby, nietypowe (u stolarza) · 2 × 1 500–2 300 zł', ROW_SIDE, ROW_DOOR], 'około 14–23 tys. zł')}`
+  },
+  B: {
+    name: 'B · Dwa okna 40, 2 szyby', short: 'jak A, okna na 2 szyby: duża tafla i górny pas',
+    front: [
+      { t: 'win', x: 482, w: 40, yb: 122.5, h: 117.5, c: 1, r: 1, top: { h: 40, c: 1 } },
+      DOOR,
+      { t: 'win', x: 662, w: 40, yb: 122.5, h: 117.5, c: 1, r: 1, top: { h: 40, c: 1 } },
+    ],
+    posts: [], side: SIDE,
+    info: `<h3>B · Dwa okna 40, 2 szyby</h3>
+      <ul>
+        <li>Układ jak w A, ale okna frontowe mają 2 szyby: dużą taflę na dole i niski pas u góry, oddzielone jednym poziomym szprosem na tej samej wysokości w obu oknach. Prawy bok: okno 86,5 na 6 szyb.</li>
+        <li><b>Plus:</b> lepszy widok z wnętrza, łatwiejsze mycie, prostsza stolarka. <b>Minus:</b> mniej „wiejsko” niż okna z szprosami.</li>
+      </ul>
+      ${order(['front: 2 × okno <b>40 × 117,5</b>, 2 szyby, nietypowe (u stolarza) · 2 × 1 400–2 100 zł', ROW_SIDE, ROW_DOOR], 'około 14–22,5 tys. zł')}`
+  },
+  F: {
+    name: 'F · Dwa okna katalogowe 56,5', short: 'drzwi 120 i dwa okna 56,5 × 117,5, szafa węższa o 10',
+    front: [
+      { t: 'win', x: 465.5, w: 56.5, yb: 122.5, h: 117.5, c: 2, r: 3 },
+      DOOR,
+      { t: 'win', x: 662, w: 56.5, yb: 122.5, h: 117.5, c: 2, r: 3 },
+    ],
+    posts: [], wardrobe: 50, side: SIDE,
+    info: `<h3>F · Dwa okna katalogowe 56,5</h3>
+      <ul>
+        <li>Drzwi 120 na środku, po obu stronach okno 56,5 × 117,5 na 6 szyb, 10 cm od drzwi, symetrycznie. Prawy bok: okno 86,5 na 6 szyb.</li>
+        <li>Okno od strony szafy (z lewej patrząc z zewnątrz, z prawej patrząc od środka) zachodzi na szafę 60 o 10 cm, dlatego <b>szafa ma 50 zamiast 60</b>. Na rzucie przerywana linia pokazuje dawną szerokość. Większe okno katalogowe, 86,5, już się nie zmieści: szafa mogłaby mieć wtedy najwyżej 20 cm.</li>
+        <li><b>Plus:</b> wszystkie okna z katalogu, front symetryczny i jaśniejszy niż w A. <b>Minus:</b> szafa traci 10 cm.</li>
+      </ul>
+      ${order(['front: 2 × okno <b>56,5 × 117,5</b> (katalogowe 565 × 1175), 6 szyb · 2 × 1 700–2 500 zł', ROW_SIDE, ROW_DOOR], 'około 14,5–23 tys. zł')}`
+  },
+  E: {
+    name: 'E · Asymetria: jedno okno 86,5', short: 'lewa część pełna (szafa), z prawej okno 86,5 katalogowe',
+    front: [
+      DOOR,
+      { t: 'win', x: 662, w: 86.5, yb: 122.5, h: 117.5, c: 2, r: 3 },
+    ],
+    posts: [], side: SIDE,
+    info: `<h3>E · Asymetria: jedno okno 86,5</h3>
+      <ul>
+        <li>Z lewej, za szafą, front jest pełny. Z prawej, gdzie szafy nie ma, jedno okno 86,5 × 117,5 na 6 szyb, takie samo jak na prawym boku.</li>
+        <li><b>Plus:</b> tylko jeden typ okna (2 sztuki z katalogu), najtaniej, a okno ganku rymuje się z oknem domu. <b>Minus:</b> front niesymetryczny.</li>
+      </ul>
+      ${order(['front i prawy bok: 2 × okno <b>86,5 × 117,5</b> (katalogowe 865 × 1175), 6 szyb · 2 × 2 200–3 200 zł', ROW_DOOR], 'około 13,5–21,5 tys. zł')}`
+  },
+  A2: {
+    name: 'A2 · Asymetria: okna 40 i 100', short: 'z lewej okno 40 na 3 szyby, z prawej szerokie 100 na 6 szyb',
+    front: [
+      { t: 'win', x: 482, w: 40, yb: 122.5, h: 117.5, c: 1, r: 3 },
+      DOOR,
+      { t: 'win', x: 662, w: 100, yb: 122.5, h: 117.5, c: 2, r: 3 },
+    ],
+    posts: [], side: SIDE,
+    info: `<h3>A2 · Asymetria: okna 40 i 100</h3>
+      <ul>
+        <li>Drzwi 120 na środku, z lewej okno 40 × 117,5 na 3 szyby, z prawej okno 100 × 117,5 na 6 szyb. To najszersze okno, jakie się zmieści: kończy się 6 cm przed wewnętrzną stroną prawej ściany. Prawy bok: okno 86,5 na 6 szyb.</li>
+        <li><b>Plus:</b> najwięcej światła z prawej, gdzie nie ma szafy. <b>Minus:</b> front wyraźnie asymetryczny, a okno 100 nie jest katalogowe.</li>
+      </ul>
+      ${order(['front z lewej: okno <b>40 × 117,5</b>, 3 szyby, nietypowe (u stolarza) · 1 500–2 300 zł', 'front z prawej: okno <b>100 × 117,5</b>, 6 szyb, nietypowe (u stolarza) · 2 600–3 600 zł', ROW_SIDE, ROW_DOOR], 'około 15–24 tys. zł')}`
+  },
+};
+
+const st = { v: 'A', eave: 'rynna', pitch: 30, fin: 'biel', gw: 'kapliczka', pas: 'belka', trs: 'nie', depth: 150, cam: 'p45' };
+const q = new URLSearchParams(location.search);
+['v', 'eave', 'fin', 'gw', 'pas', 'trs', 'cam'].forEach(k => { if (q.get(k)) st[k] = q.get(k); });
+['pitch', 'depth'].forEach(k => { if (q.get(k)) st[k] = +q.get(k); });
+
+const HOUSE = { len: 1513, depth: 730, eave: 282, edge: 284, ridge: 580, ov: 45, soffit: 265 };
+const G = { x0: 386, x1: 798, xc: 592, W: 412, wall: 30, ov: 35, t: 22, ovf: 25 };
+const SILL = 115;
+const PAL = {
+  sosna: { board: '#d8a868', line: '#b98a4c', post: '#b77d40', beam: '#a86f36', wiatr: '#a86f36', frame: '#a96f34', leaf: '#c99355', sill: '#9b6530' },
+  biel:  { board: '#d8a868', line: '#b98a4c', post: '#f4f0e7', beam: '#f4f0e7', wiatr: '#f4f0e7', frame: '#a96f34', leaf: '#c99355', sill: '#f4f0e7' },
+  nieb:  { board: '#a9c6e8', line: '#8eadd3', post: '#f4f0e7', beam: '#f4f0e7', wiatr: '#f4f0e7', frame: '#a96f34', leaf: '#c99355', sill: '#f4f0e7' },
+  niebb: { board: '#a9c6e8', line: '#8eadd3', post: '#f4f0e7', beam: '#f4f0e7', wiatr: '#f4f0e7', frame: '#f6f3ec', leaf: '#efebe3', sill: '#f4f0e7' },
+};
+const C = { blue: '#a9c6e8', blueLine: '#86a7cf', trim: '#f5f2ea', roof: '#6c2535', gutter: '#4a3027', fascia: '#7a2e2a', stone: '#a39e95', brick: '#b0644a', glassDark: '#5f7d90' };
+
+// ---- renderer / scene ----
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#9fc6ea').convertSRGBToLinear();
+scene.fog = new THREE.Fog('#cfe3f4', 4000, 9000);
+const camera = new THREE.PerspectiveCamera(40, 1, 10, 20000);
+
+scene.add(new THREE.HemisphereLight(0xe8f2ff, 0x7d7458, 0.75));
+const sun = new THREE.DirectionalLight(0xfff0d8, 1.05);
+sun.position.set(-900, 1400, 1500); sun.target.position.set(700, 0, 0);
+sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -1400, right: 1400, top: 1400, bottom: -1400, near: 100, far: 5000 });
+sun.shadow.bias = -0.0008;
+scene.add(sun, sun.target);
+
+// ---- textures ----
+function canvasTex(w, h, draw) {
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  draw(cv.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; t.anisotropy = 8;
+  return t;
+}
+// one board per texture repeat; vertical = line on the left edge, horizontal = line on the bottom edge
+function boardTex(color, line, vertical) {
+  return canvasTex(64, 64, (g, w, h) => {
+    g.fillStyle = color; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(90,60,20,${Math.random() * 0.05})`; vertical ? g.fillRect(Math.random() * w, 0, 1, h) : g.fillRect(0, Math.random() * h, w, 1); }
+    g.fillStyle = line; vertical ? g.fillRect(0, 0, 3, h) : g.fillRect(0, h - 4, w, 4);
+  });
+}
+const stripeTex = (vertical) => canvasTex(32, 32, (g, w, h) => {
+  g.fillStyle = C.roof; g.fillRect(0, 0, w, h);
+  const grd = vertical ? g.createLinearGradient(0, 0, w, 0) : g.createLinearGradient(0, 0, 0, h);
+  grd.addColorStop(0, '#00000000'); grd.addColorStop(0.5, '#0000003a'); grd.addColorStop(1, '#00000000');
+  g.fillStyle = grd; g.fillRect(0, 0, w, h);
+});
+const TEX = { roofV: stripeTex(true), roofH: stripeTex(false) };
+const matCache = {};
+function mat(color, opts = {}) {
+  const key = color + JSON.stringify(opts);
+  if (!matCache[key]) matCache[key] = new THREE.MeshStandardMaterial(Object.assign({ roughness: 0.85, metalness: 0 }, opts, { color: new THREE.Color(opts.color || color).convertSRGBToLinear() }));
+  return matCache[key];
+}
+function texMat(base, rx, ry, extra) {
+  const t = base.clone(); t.needsUpdate = true; t.repeat.set(rx, ry);
+  return new THREE.MeshStandardMaterial(Object.assign({ map: t, roughness: 0.85 }, extra || {}));
+}
+const glassMat = new THREE.MeshStandardMaterial({ color: new THREE.Color('#a9c7d8').convertSRGBToLinear(), roughness: 0.05, metalness: 0.3, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
+
+// ---- geometry helpers (cm; x along facade, y up, z out of facade) ----
+function box(g, x0, x1, y0, y1, z0, z1, m, shadow = true) {
+  const w = x1 - x0, h = y1 - y0, d = z1 - z0; if (w <= 0.01 || h <= 0.01 || d <= 0.01) return null;
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+  mesh.position.set(x0 + w / 2, y0 + h / 2, z0 + d / 2);
+  mesh.castShadow = shadow; mesh.receiveShadow = true; g.add(mesh); return mesh;
+}
+// Plane mapping for walls: u along the wall, y up, d depth into the wall from its outer face
+function frontMap(D) { return (g, u0, u1, y0, y1, d0, d1, m) => box(g, G.x0 + u0, G.x0 + u1, y0, y1, D - d1, D - d0, m); }
+function rightMap(D) { return (g, u0, u1, y0, y1, d0, d1, m) => box(g, G.x1 - d1, G.x1 - d0, y0, y1, D - u1, D - u0, m); }
+function leftMap(D) { return (g, u0, u1, y0, y1, d0, d1, m) => box(g, G.x0 + d0, G.x0 + d1, y0, y1, D - u1, D - u0, m); }
+
+// solid wall pieces around rectangular openings
+function wallPieces(len, openings, yb, yt) {
+  const edges = new Set([0, len]);
+  openings.forEach(o => { edges.add(Math.max(0, o.u)); edges.add(Math.min(len, o.u + o.w)); });
+  const xs = [...edges].sort((a, b) => a - b), out = [];
+  for (let i = 0; i < xs.length - 1; i++) {
+    const a = xs[i], b = xs[i + 1]; if (b - a < 0.01) continue;
+    const cov = openings.filter(o => o.u <= a + 0.01 && o.u + o.w >= b - 0.01).sort((p, q) => p.yb - q.yb);
+    let y = yb;
+    cov.forEach(o => { if (o.yb > y) out.push([a, b, y, o.yb]); y = Math.max(y, o.yb + o.h); });
+    if (y < yt) out.push([a, b, y, yt]);
+  }
+  return out;
+}
+function boardsWall(g, map, len, openings, yb, yt, thick, p) {
+  const vTex = boardTex(p.board, p.line, true), hTex = boardTex(p.board, p.line, false);
+  const pieces = wallPieces(len, openings, yb, yt);
+  pieces.forEach(([a, b, y0, y1]) => {
+    const parts = y1 <= SILL ? [[y0, y1, 'v']] : y0 >= SILL ? [[y0, y1, 'h']] : [[y0, SILL, 'v'], [SILL, y1, 'h']];
+    parts.forEach(([p0, p1, kind]) => {
+      const m = kind === 'v' ? texMat(vTex, (b - a) / 11, 1) : texMat(hTex, 1, (p1 - p0) / 14);
+      map(g, a, b, p0, p1, 0, thick, m);
+    });
+  });
+  // sill-level rail board, only on solid wall (never across a door)
+  pieces.filter(([a, b, y0, y1]) => y0 <= SILL - 3 && y1 >= SILL + 3).forEach(([a, b]) => map(g, a, b, SILL - 3, SILL + 3, -1.5, 0, mat(p.post)));
+}
+
+function windowAt(g, map, o, u, p) {
+  const f = o.tr ? 4 : 6, fm = mat(p.frame, { roughness: 0.6 });
+  const d0 = 4, d1 = 12;
+  map(g, u, u + o.w, o.yb, o.yb + f, d0, d1, fm);
+  map(g, u, u + o.w, o.yb + o.h - f, o.yb + o.h, d0, d1, fm);
+  map(g, u, u + f, o.yb, o.yb + o.h, d0, d1, fm);
+  map(g, u + o.w - f, u + o.w, o.yb, o.yb + o.h, d0, d1, fm);
+  const gx = u + f, gw = o.w - 2 * f, gy = o.yb + f, gh = o.h - 2 * f;
+  map(g, gx, gx + gw, gy, gy + gh, 7.8, 8.2, glassMat).castShadow = false;
+  let mh = gh;
+  if (o.top) {
+    const ty = gy + gh - o.top.h; map(g, gx, gx + gw, ty - 4, ty, 6, 10, fm); mh = gh - o.top.h - 4;
+    for (let i = 1; i < o.top.c; i++) { const x = gx + i * gw / o.top.c; map(g, x - 1.5, x + 1.5, ty, gy + gh, 6.5, 9.5, fm); }
+  }
+  for (let i = 1; i < o.c; i++) { const x = gx + i * gw / o.c; map(g, x - 1.5, x + 1.5, gy, gy + mh, 6.5, 9.5, fm); }
+  for (let j = 1; j < o.r; j++) { const yy = gy + j * mh / o.r; map(g, gx, gx + gw, yy - 1.5, yy + 1.5, 6.5, 9.5, fm); }
+  if (!o.tr && o.yb > 40) map(g, u - 5, u + o.w + 5, o.yb - 5, o.yb, -5, 6, mat(p.sill));
+}
+
+function doorAt(g, map, o, u, p) {
+  const f = 6, fm = mat(p.frame, { roughness: 0.6 }), lm = mat(p.leaf, { roughness: 0.7 }), gm = mat(C.glassDark, { roughness: 0.1, metalness: 0.4 });
+  map(g, u, u + o.w, o.yb + o.h - f, o.yb + o.h, 4, 12, fm);
+  map(g, u, u + f, o.yb, o.yb + o.h, 4, 12, fm);
+  map(g, u + o.w - f, u + o.w, o.yb, o.yb + o.h, 4, 12, fm);
+  const inner = o.w - 2 * f, leaves = o.asym ? [[u + f, inner / 3, 1], [u + f + inner / 3, inner * 2 / 3, 2]] : [[u + f, inner, 2]];
+  leaves.forEach(([lx, lw, cols]) => {
+    map(g, lx + 0.5, lx + lw - 0.5, o.yb, o.yb + o.h - f, 7, 12, lm);
+    const gx = lx + 7, gw = lw - 14, gb = o.yb + o.h * 0.42, gt = o.yb + o.h - f - 8;
+    map(g, gx, gx + gw, gb, gt, 6.6, 7, gm);
+    for (let i = 1; i < cols; i++) { const x = gx + i * gw / cols; map(g, x - 1.5, x + 1.5, gb, gt, 6, 7, fm); }
+    for (let j = 1; j < 3; j++) { const yy = gb + j * (gt - gb) / 3; map(g, gx, gx + gw, yy - 1.5, yy + 1.5, 6, 7, fm); }
+    map(g, gx, gx + gw, o.yb + 12, o.yb + o.h * 0.42 - 18, 6, 7, lm);
+    map(g, gx + 5, gx + gw - 5, o.yb + 17, o.yb + o.h * 0.42 - 23, 5.2, 6, lm);
+  });
+  const hx = o.asym ? u + f + inner / 3 + 5 : u + o.w - 16;
+  map(g, hx, hx + 3, o.yb + 95, o.yb + 110, 3, 7, mat('#3b3330', { metalness: 0.6, roughness: 0.4 }));
+}
+
+// ---- house ----
+function buildHouse() {
+  const g = new THREE.Group(), L = HOUSE.len, D = HOUSE.depth;
+  const sid = boardTex(C.blue, C.blueLine, false);
+  box(g, 0, L, 10, HOUSE.soffit, -D, 0, texMat(sid, 1, (HOUSE.soffit - 10) / 14));
+  box(g, -1, L + 1, 0, 10, -D - 1, 1, mat('#7c6a5a'));
+  [[0, 12, -12, 1], [L - 12, L, -12, 1], [0, 12, -D - 1, -D + 12], [L - 12, L, -D - 1, -D + 12]].forEach(([a, b, c, d]) => box(g, a - 1, b + 1, 10, HOUSE.soffit, c, d, mat(C.trim)));
+  // gable roof: ridge along x, gables at both ends
+  const half = D / 2 + HOUSE.ov, zr = -D / 2, ov = HOUSE.ov;
+  const roofPlane = (zEave) => {
+    const geo = new THREE.BufferGeometry();
+    const xA = -ov, xB = L + ov;
+    const v = [xA, HOUSE.eave, zEave, xB, HOUSE.eave, zEave, xB, HOUSE.ridge, zr, xA, HOUSE.eave, zEave, xB, HOUSE.ridge, zr, xA, HOUSE.ridge, zr];
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
+    const uv = []; for (let i = 0; i < v.length; i += 3) uv.push(v[i] / 9, (v[i + 1]) / 100);
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.computeVertexNormals();
+    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: TEX.roofV, roughness: 0.55, metalness: 0.25, side: THREE.DoubleSide }));
+    m.castShadow = m.receiveShadow = true; g.add(m);
+  };
+  roofPlane(ov); roofPlane(-D - ov);
+  // gable ends: blue vertical boards, serrated bottom trim, small window
+  const gTex = boardTex(C.blue, C.blueLine, true);
+  [0, L].forEach((x, i) => {
+    const sh = new THREE.Shape(); sh.moveTo(0, HOUSE.soffit); sh.lineTo(D, HOUSE.soffit); sh.lineTo(D / 2, HOUSE.ridge - 6); sh.lineTo(0, HOUSE.soffit);
+    const t = gTex.clone(); t.needsUpdate = true; t.repeat.set(1 / 11, 1 / 100);
+    const geo = new THREE.ExtrudeGeometry(sh, { depth: 6, bevelEnabled: false });
+    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: t, roughness: 0.85 }));
+    m.rotation.y = -Math.PI / 2; m.position.set(i === 0 ? 2 : L + 4, 0, -D);
+    m.castShadow = m.receiveShadow = true; g.add(m);
+    const sx = i === 0 ? -6 : L + 6, sx2 = i === 0 ? 0 : L;
+    box(g, Math.min(sx, sx2), Math.max(sx, sx2), HOUSE.soffit + 10, HOUSE.soffit + 18, -D - 20, 20, mat(C.trim));
+    box(g, Math.min(sx, sx2) - 1, Math.max(sx, sx2) + 1, HOUSE.soffit + 70, HOUSE.soffit + 175, -D / 2 - 55, -D / 2 + 55, mat(C.trim));
+    box(g, Math.min(sx, sx2) - 2, Math.max(sx, sx2) + 2, HOUSE.soffit + 82, HOUSE.soffit + 163, -D / 2 - 43, -D / 2 + 43, mat(C.glassDark, { roughness: 0.1, metalness: 0.4 }));
+    // verge boards
+    [[1, 1], [-1, -1]].forEach(([sg]) => {
+      const len = Math.hypot(half, HOUSE.ridge - HOUSE.eave), ang = Math.atan2(HOUSE.ridge - HOUSE.eave, half);
+      const vb = new THREE.Mesh(new THREE.BoxGeometry(4, 18, len), mat(C.fascia));
+      vb.position.set(i === 0 ? -ov - 2 : L + ov + 2, (HOUSE.eave + HOUSE.ridge) / 2 - 6, zr + sg * half / 2);
+      vb.rotation.x = sg * ang; g.add(vb);
+    });
+  });
+  // chimneys
+  [[548, -250], [766, -250]].forEach(([cx, cz]) => { box(g, cx, cx + 40, 400, 620, cz, cz + 40, mat('#9c4a3c')); box(g, cx - 4, cx + 44, 620, 627, cz - 4, cz + 44, mat('#7d3a30')); });
+  // fascia, soffit, front window
+  box(g, -ov, L + ov, HOUSE.soffit, HOUSE.soffit + 4, 0, ov, mat('#bcd2ec'));
+  box(g, -ov, L + ov, 268, 282, ov - 3, ov, mat(C.fascia));
+  box(g, 870, 1030, 110, 258, 0, 3, mat(C.trim));
+  box(g, 885, 1015, 125, 243, 0, 3.5, mat('#a96f34'));
+  box(g, 892, 948, 132, 236, 0, 4, mat(C.glassDark, { roughness: 0.1, metalness: 0.4 }));
+  box(g, 952, 1008, 132, 236, 0, 4, mat(C.glassDark, { roughness: 0.1, metalness: 0.4 }));
+  box(g, 862, 1038, 104, 112, 0, 8, mat(C.trim));
+  // existing door on the house wall (inside the porch)
+  box(g, 521, 663, 30, 249, 0, 2, mat(C.trim));
+  box(g, 536, 648, 30, 234, 0, 3, mat('#c48a4c'));
+  // right downpipe
+  box(g, L + 6, L + 14, 0, 280, 30, 38, mat(C.gutter));
+  return g;
+}
+
+// ---- porch ----
+function roofGeom() {
+  const tan = Math.tan(st.pitch * Math.PI / 180);
+  const plate = st.eave === 'rynna' ? HOUSE.edge - G.t + G.ov * tan : 315;
+  const eY = plate + G.t - G.ov * tan, rY = eY + (G.W / 2 + G.ov) * tan;
+  return { tan, eY, rY, plate };
+}
+// arched-top outline (x, y in world cm)
+function archShape(cx, yb, w, h) {
+  const r = w / 2, yt = yb + h - r, sh = new THREE.Shape();
+  sh.moveTo(cx - r, yb); sh.lineTo(cx - r, yt); sh.absarc(cx, yt, r, Math.PI, 0, true); sh.lineTo(cx + r, yb); sh.lineTo(cx - r, yb);
+  return sh;
+}
+// glazed niche in the gable with a standing folk figure of Our Lady in a blue mantle
+function kapliczka3d(g, cx, yb, gh, D, p) {
+  const w = 34, h = Math.min(58, gh * 0.42), s = h * 0.8 / 40, base = yb + 2;
+  const outer = archShape(cx, yb - 4, w + 12, h + 10); outer.holes.push(archShape(cx, yb, w, h));
+  const fr = new THREE.Mesh(new THREE.ExtrudeGeometry(outer, { depth: 7, bevelEnabled: false }), mat(p.wiatr)); fr.position.z = D; fr.castShadow = true; g.add(fr);
+  const back = new THREE.Mesh(new THREE.ShapeGeometry(archShape(cx, yb, w, h)), mat('#dfe8f4')); back.position.z = D + 0.3; g.add(back);
+  box(g, cx - w / 2 - 9, cx + w / 2 + 9, yb - 9, yb - 4, D, D + 9, mat(p.wiatr));
+  const fig = new THREE.Group(); fig.position.set(cx, 0, D + 3); fig.scale.z = 0.3; g.add(fig);
+  const add = (geo, m, x, yy, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, yy, z || 0); fig.add(o); return o; };
+  add(new THREE.BoxGeometry(14 * s, 3, 8 * s), mat('#d8cdbb'), 0, base - 0.5);
+  add(new THREE.CylinderGeometry(5.5 * s, 10 * s, 30 * s, 20), mat('#3d6db5', { roughness: 0.5 }), 0, base + 15 * s);
+  add(new THREE.SphereGeometry(5 * s, 20, 14, 0, Math.PI * 2, 0, Math.PI * 0.62), mat('#3d6db5', { roughness: 0.5 }), 0, base + 31 * s, -0.6 * s);
+  add(new THREE.BoxGeometry(4.5 * s, 25 * s, 2 * s), mat('#f5f2ea'), 0, base + 13 * s, 8.6 * s);
+  add(new THREE.SphereGeometry(3.1 * s, 16, 12), mat('#f0d6bd'), 0, base + 32.5 * s, 1.4 * s);
+  add(new THREE.SphereGeometry(1.8 * s, 12, 10), mat('#f0d6bd'), 0, base + 22 * s, 6.4 * s);
+  const halo = add(new THREE.TorusGeometry(6.2 * s, 0.55 * s, 8, 32), mat('#d6b04a', { metalness: 0.6, roughness: 0.35 }), 0, base + 33 * s, -3 * s);
+  const gl = new THREE.Mesh(new THREE.ShapeGeometry(archShape(cx, yb, w, h)), glassMat); gl.position.z = D + 6.2; g.add(gl);
+}
+
+// Optional transom strip: openings keep their size (heads at 240), no rail; a fixed transom
+// sits directly on every opening, up to the inside ceiling (265) but clear of the gable teeth.
+const TR = { head: 240, top: 265 };
+const trCols = w => Math.max(2, Math.round(w / 35));
+const trTop = () => Math.min(TR.top, roofGeom().plate - (st.pas === 'belka' ? 23 : 15));
+function withTr(list) {
+  const tr = list.filter(o => o.t === 'door' || o.t === 'win').map(o =>
+    ({ t: 'win', x: o.x, w: o.w, yb: TR.head, h: trTop() - TR.head, c: trCols(o.w), r: 1, tr: 1 }));
+  return [...list, ...tr];
+}
+const VV = k => {
+  const v = V[k];
+  if (!v || st.trs !== 'tak') return v;
+  return { ...v, front: withTr(v.front), side: withTr(v.side) };
+};
+
+function buildPorch() {
+  const g = new THREE.Group(), v = VV(st.v), p = PAL[st.fin], D = st.depth, { x0, x1, xc, W, wall, ov, t, ovf } = G;
+  const { tan, eY, rY, plate } = roofGeom(), top = st.pas === 'belka' ? plate - 15 : plate;
+  // plinth, floor, interior
+  box(g, x0 - 4, x1 + 4, 0, 30, 0, D + 4, mat(C.stone));
+  box(g, x0 + wall, x1 - wall, 30, 31, 0, D - wall, mat('#8b6a45'));
+  box(g, x0 + wall, x1 - wall, 264, 266, 0, D - wall, mat('#f2eee6'));
+  box(g, x0 + wall, x0 + wall + (v.wardrobe || 60), 31, 245, 4, D - wall - 4, mat('#c89a62'));
+  // front wall
+  const fm = frontMap(D), frontOpen = v.front.filter(o => o.t !== 'rail').map(o => ({ u: o.x - x0, w: o.w, yb: o.yb, h: o.h }));
+  boardsWall(g, fm, W, frontOpen, 30, top, wall, p);
+  v.front.forEach(o => {
+    if (o.t === 'door') doorAt(g, fm, o, o.x - x0, p);
+    else if (o.t === 'rail') fm(g, 0, W, o.yb, o.yb + o.h, -2, 0, mat(p.post));
+    else windowAt(g, fm, o, o.x - x0, p);
+  });
+  fm(g, 0, 12, 30, top, -3, 0, mat(p.post)); fm(g, W - 12, W, 30, top, -3, 0, mat(p.post));
+  // side walls (depth minus front wall); right one with window(s) centered
+  const sideLen = D - wall, rm = rightMap(D), lm = leftMap(D);
+  const sideOpen = v.side.filter(o => o.t === 'win').map(o => ({ u: wall + sideLen / 2 - o.w / 2, w: o.w, yb: o.yb, h: o.h, o }));
+  const shift = (m) => (gg, u0, u1, y0, y1, d0, d1, mm) => m(gg, u0 + wall, u1 + wall, y0, y1, d0, d1, mm);
+  boardsWall(g, shift(rm), sideLen, sideOpen.map(s => ({ ...s, u: s.u - wall })), 30, top, wall, p);
+  sideOpen.forEach(s => windowAt(g, rm, s.o, s.u, p));
+  v.side.filter(o => o.t === 'rail').forEach(o => rm(g, wall, D, o.yb, o.yb + o.h, -2, 0, mat(p.post)));
+  boardsWall(g, shift(lm), sideLen, [], 30, top, wall, p);
+  [rm, lm].forEach(m => { m(g, 0, 12, 30, top, -3, 0, mat(p.post)); m(g, D - 12, D, 30, top, -3, 0, mat(p.post)); });
+  if (st.pas === 'belka') {
+    // beam around the top with serrated trim
+    box(g, x0 - 6, x1 + 6, top, plate, 0, D + 6, mat(p.beam));
+    for (let x = x0 - 6; x + 12 <= x1 + 6; x += 12) {
+      const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(12, 0); sh.lineTo(6, -8); sh.lineTo(0, 0);
+      const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 2, bevelEnabled: false }), mat(p.beam));
+      m.position.set(x, top, D + 4); g.add(m);
+    }
+  } else {
+    // no beam: gable boards run past the plate and end in cut points over the wall boards
+    const tm = mat(p.board, { roughness: 0.85 });
+    for (let x = x0; x + 12 <= x1 + 0.1; x += 12) {
+      const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(12, 0); sh.lineTo(12, -8); sh.lineTo(6, -15); sh.lineTo(0, -8); sh.lineTo(0, 0);
+      const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 2.5, bevelEnabled: false }), tm);
+      m.position.set(x, plate, D); m.castShadow = true; g.add(m);
+    }
+  }
+  // front gable (vertical boards)
+  const gh = W / 2 * tan, sh = new THREE.Shape();
+  sh.moveTo(x0, plate); sh.lineTo(x1, plate); sh.lineTo(xc, plate + gh); sh.lineTo(x0, plate);
+  const gt = boardTex(p.board, p.line, true).clone(); gt.needsUpdate = true; gt.repeat.set(1 / 11, 1 / 100);
+  const gm = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 10, bevelEnabled: false }), new THREE.MeshStandardMaterial({ map: gt, roughness: 0.85 }));
+  gm.position.z = D - 10; gm.castShadow = gm.receiveShadow = true; g.add(gm);
+  if (st.gw === 'kapliczka') kapliczka3d(g, xc, plate + gh * 0.2, gh, D, p);
+  if (st.gw === 'romb' || st.gw === 'okrag') {
+    const cy = plate + gh * 0.42, s = Math.min(26, gh * 0.3);
+    const w = new THREE.Mesh(st.gw === 'okrag' ? new THREE.CylinderGeometry(s * 0.85, s * 0.85, 4, 32) : new THREE.BoxGeometry(s * 1.4, s * 1.4, 4), mat(p.frame));
+    if (st.gw === 'okrag') w.rotation.x = Math.PI / 2; else w.rotation.z = Math.PI / 4;
+    w.position.set(xc, cy, D + 1); g.add(w);
+    const gl = w.clone(); gl.material = mat(C.glassDark, { roughness: 0.1, metalness: 0.4 }); gl.scale.set(0.75, st.gw === 'okrag' ? 1.2 : 0.75, st.gw === 'okrag' ? 0.75 : 1.2); gl.position.z = D + 1.5; g.add(gl);
+  }
+  // roof planes: run back until they disappear inside the house roof
+  const zf = D + ovf, zb = -320, depthLen = zf - zb;
+  [[-1, x0 - ov], [1, x1 + ov]].forEach(([sg, xe]) => {
+    const len = Math.hypot(xc - xe, rY - eY), ang = Math.atan2(rY - eY, Math.abs(xc - xe));
+    const t2 = TEX.roofH.clone(); t2.needsUpdate = true; t2.repeat.set(1, depthLen / 9);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(len + 2, 4, depthLen), new THREE.MeshStandardMaterial({ map: t2, roughness: 0.55, metalness: 0.25 }));
+    m.position.set((xc + xe) / 2, (rY + eY) / 2 + 2, (zf + zb) / 2); m.rotation.z = -sg * ang;
+    m.castShadow = m.receiveShadow = true; g.add(m);
+    // barge board on the front rake
+    const bb = new THREE.Mesh(new THREE.BoxGeometry(len, t, 4), mat(p.wiatr));
+    bb.position.set((xc + xe) / 2 + sg * 0, (rY + eY) / 2 - t / 2 + 2, zf - 2); bb.rotation.z = -sg * ang; bb.castShadow = true; g.add(bb);
+    // eave fascia along the side and gutter
+    box(g, Math.min(xe, xe - sg * 3), Math.max(xe, xe - sg * 3) + 0, eY - t, eY, 0, zf, mat(p.wiatr));
+    const gx = xe + sg * 6;
+    box(g, gx - 5, gx + 5, eY - 16, eY - 6, st.eave === 'rynna' ? HOUSE.ov : 0, zf, mat(C.gutter));
+    // downpipe at the front corner
+    const px = sg < 0 ? x0 - 14 : x1 + 6;
+    box(g, px, px + 8, 0, eY - 30, D - 10, D - 2, mat(C.gutter));
+    box(g, Math.min(px, gx), Math.max(px + 8, gx), eY - 34, eY - 26, D - 10, D - 2, mat(C.gutter));
+  });
+  // steps
+  box(g, 512, 672, 15, 30, D, D + 30, mat(C.brick));
+  box(g, 500, 684, 0, 15, D, D + 60, mat(C.brick));
+  return g;
+}
+
+// house gutter: on the gutter line it wraps around the porch; otherwise it stops at the porch walls
+function buildGutters() {
+  const g = new THREE.Group(), L = HOUSE.len, ov = HOUSE.ov;
+  const left = st.eave === 'rynna' ? G.x0 - G.ov - 1 : G.x0, right = st.eave === 'rynna' ? G.x1 + G.ov + 1 : G.x1;
+  box(g, -ov - 8, left, 272, 284, ov, ov + 12, mat(C.gutter));
+  box(g, right, L + ov + 8, 272, 284, ov, ov + 12, mat(C.gutter));
+  return g;
+}
+
+// ---- surroundings ----
+function buildGround() {
+  const g = new THREE.Group();
+  const grass = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), mat('#86a35c'));
+  grass.rotation.x = -Math.PI / 2; grass.receiveShadow = true; g.add(grass);
+  const grav = new THREE.Mesh(new THREE.PlaneGeometry(2200, 900), mat('#9d9384'));
+  grav.rotation.x = -Math.PI / 2; grav.position.set(700, 0.5, 520); grav.receiveShadow = true; g.add(grav);
+  const tree = (x, z, h, r, pine) => {
+    const tr = box(g, x - 10, x + 10, 0, h * 0.45, z - 10, z + 10, mat('#6b5240'));
+    const crown = new THREE.Mesh(pine ? new THREE.ConeGeometry(r, h * 0.75, 10) : new THREE.SphereGeometry(r, 12, 10), mat(pine ? '#3f5b3a' : '#6f8f45'));
+    crown.position.set(x, pine ? h * 0.55 : h * 0.65, z); crown.castShadow = true; g.add(crown);
+  };
+  tree(-500, -300, 1300, 260, true); tree(-350, -1100, 1100, 220, true); tree(1900, -500, 1500, 280, true);
+  tree(2100, 300, 800, 300, false); tree(-700, 500, 900, 320, false); tree(1200, -1500, 1400, 260, true);
+  // person for scale
+  const pm = mat('#5a544e');
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(17, 15, 80, 16), pm); body.position.set(250, 120, 300); g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(11, 16, 12), pm); head.position.set(250, 165, 300); g.add(head);
+  [-8, 8].forEach(dx => { const l = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 80, 10), pm); l.position.set(250 + dx, 40, 300); g.add(l); });
+  g.traverse(o => { if (o.isMesh) { o.castShadow = o.castShadow || false; } });
+  body.castShadow = head.castShadow = true;
+  if (q.get('noperson')) [body, head].concat(g.children.filter(o => o.geometry && o.geometry.type === 'CylinderGeometry' && o.position.x > 240 && o.position.x < 260)).forEach(o => o.visible = false);
+  return g;
+}
+
+scene.add(buildGround());
+scene.add(buildHouse());
+let porch = null, gutters = null;
+function rebuild() {
+  if (porch) { scene.remove(porch); porch.traverse(o => o.geometry && o.geometry.dispose()); }
+  if (gutters) scene.remove(gutters);
+  porch = buildPorch(); gutters = buildGutters(); scene.add(porch, gutters);
+}
+
+// ---- camera / orbit ----
+const target = new THREE.Vector3(650, 190, 0);
+const sph = { r: 1500, th: 0, ph: 1.4 };
+const CAMS = {
+  front: { t: [700, 230, 0], r: 1900, th: 0, ph: 1.5 },
+  p45: { t: [640, 210, 60], r: 1250, th: 0.78, ph: 1.42 },
+  l45: { t: [620, 210, 60], r: 1250, th: -0.75, ph: 1.42 },
+  ganek: { t: [592, 200, 80], r: 700, th: 0.35, ph: 1.45 },
+  gora: { t: [700, 150, 0], r: 2400, th: 0.35, ph: 0.75 },
+};
+function setCam(k) { const c = CAMS[k]; if (!c) return; target.set(...c.t); Object.assign(sph, { r: c.r * (+q.get('rmul') || 1), th: c.th, ph: c.ph }); st.cam = k; }
+function updateCam() {
+  sph.ph = Math.min(Math.max(sph.ph, 0.15), 1.56); sph.r = Math.min(Math.max(sph.r, 250), 6000);
+  camera.position.set(target.x + sph.r * Math.sin(sph.ph) * Math.sin(sph.th), target.y + sph.r * Math.cos(sph.ph), target.z + sph.r * Math.sin(sph.ph) * Math.cos(sph.th));
+  if (camera.position.y < 40) camera.position.y = 40;
+  camera.lookAt(target);
+}
+let drag = null;
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); drag = { x: e.clientX, y: e.clientY, pan: e.shiftKey || e.button === 2 }; });
+canvas.addEventListener('pointerup', () => drag = null);
+canvas.addEventListener('pointermove', e => {
+  if (!drag || pinch) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY;
+  if (drag.pan) {
+    const k = sph.r / 900, right = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0), up = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1);
+    target.addScaledVector(right, -dx * k).addScaledVector(up, dy * k);
+  } else { sph.th -= dx * 0.005; sph.ph -= dy * 0.005; }
+});
+canvas.addEventListener('wheel', e => { e.preventDefault(); sph.r *= Math.exp(e.deltaY * 0.001); }, { passive: false });
+let pinch = null;
+canvas.addEventListener('touchstart', e => { if (e.touches.length === 2) pinch = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); });
+canvas.addEventListener('touchmove', e => {
+  if (e.touches.length === 2 && pinch) { const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); sph.r *= pinch / d; pinch = d; }
+});
+canvas.addEventListener('touchend', e => { if (e.touches.length < 2) pinch = null; });
+
+// ---- UI ----
+function seg(id, key, opts, after) {
+  const el = document.getElementById(id);
+  el.innerHTML = opts.map(([v, l]) => `<button data-v="${v}" class="${String(st[key]) === String(v) ? 'on' : ''}">${l}</button>`).join('');
+  el.onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    st[key] = isNaN(+b.dataset.v) ? b.dataset.v : +b.dataset.v;
+    if (after) after(st[key]); ui();
+  };
+}
+function ui() {
+  seg('c-v', 'v', Object.keys(V).map(k => [k, V[k].name]), rebuild);
+  seg('c-cam', 'cam', [['front', 'front'], ['p45', 'z prawej 45°'], ['l45', 'z lewej 45°'], ['ganek', 'ganek blisko'], ['gora', 'z góry']], setCam);
+  seg('c-eave', 'eave', [['rynna', 'na linii rynny'], ['projekt', '50 cm wyżej']], rebuild);
+  seg('c-pitch', 'pitch', [[30, '30°'], [35, '35°'], [40, '40°']], rebuild);
+  seg('c-fin', 'fin', [['sosna', 'sama sosna'], ['biel', 'sosna + białe opaski'], ['nieb', 'niebieski'], ['niebb', 'niebieski + białe okna']], rebuild);
+  seg('c-pas', 'pas', [['belka', 'biała belka z ząbkami'], ['deski', 'ząbki na końcach desek']], rebuild);
+  seg('c-trs', 'trs', [['nie', 'bez'], ['tak', 'pasek nad oknami i drzwiami']], rebuild);
+  seg('c-depth', 'depth', [[150, '150 z zewnątrz'], [170, '170 z zewnątrz']], rebuild);
+}
+document.getElementById('tog').onclick = () => { const p = document.getElementById('panel'); p.classList.toggle('hide'); document.getElementById('tog').textContent = p.classList.contains('hide') ? 'pokaż panel' : 'ukryj panel'; };
+if (q.get('nopanel')) { document.getElementById('panel').classList.add('hide'); document.getElementById('tog').style.display = 'none'; }
+
+function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+setCam(st.cam); rebuild(); ui(); resize();
+(function loop() { updateCam(); renderer.render(scene, camera); requestAnimationFrame(loop); })();
+</script>
+</body>
+</html>
