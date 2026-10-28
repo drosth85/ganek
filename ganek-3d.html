@@ -116,7 +116,7 @@ const V = {
   },
 };
 
-const st = { v: 'A', eave: 'rynna', pitch: 30, fin: 'biel', gw: 'kapliczka', pas: 'belka', trs: 'nie', szyby: 'wariant', bok: '86', depth: 150, cam: 'p45' };
+const st = { v: 'A', eave: 'rynna', pitch: 35, fin: 'biel', gw: 'kapliczka', pas: 'belka', trs: 'nie', szyby: '2', bok: '86', depth: 150, cam: 'p45' };
 const q = new URLSearchParams(location.search);
 ['v', 'eave', 'fin', 'gw', 'pas', 'trs', 'szyby', 'bok', 'cam'].forEach(k => { if (q.get(k)) st[k] = q.get(k); });
 ['pitch', 'depth'].forEach(k => { if (q.get(k)) st[k] = +q.get(k); });
@@ -370,7 +370,11 @@ function panes(o, n) {
   const q = { ...o, top: undefined };
   n = String(n);
   if (n === '1') return { ...q, c: 1, r: 1 };
-  if (n === '2') return { ...q, c: 1, r: 1, top: { h: 40, c: 1 } };
+  if (n === '2') {
+    // square light(s) on top, one big pane below: 1 square in narrow windows, 2 in wide ones
+    const c = o.w < 70 ? 1 : 2, gw = o.w - 12;
+    return { ...q, c: 1, r: 1, top: { h: (gw - 3 * (c - 1)) / c, c } };
+  }
   if (n === '3') return o.w < 70 ? { ...q, c: 1, r: 3 } : { ...q, c: 3, r: 1 };
   return { ...q, c: 2, r: 3 };
 }
@@ -380,6 +384,8 @@ const VV = k => {
   if (st.szyby !== 'wariant') v = { ...v, front: v.front.map(o => o.t === 'win' && !o.tr ? panes(o, st.szyby) : o) };
   // narrow side window option: same 40 x 117.5, 3-pane window as the front of variant A, centred on the wall
   if (String(st.bok) === '40') v = { ...v, side: v.side.map(o => o.t === 'win' ? { ...o, x: 175 - 20, w: 40, c: 1, r: 3, top: undefined } : o) };
+  // the square-top division is repeated on the side window
+  if (String(st.szyby) === '2') v = { ...v, side: v.side.map(o => o.t === 'win' && !o.tr ? panes(o, '2') : o) };
   if (st.trs === 'tak') v = { ...v, front: withTr(v.front), side: withTr(v.side) };
   return v;
 };
@@ -565,7 +571,7 @@ function ui() {
   seg('c-pitch', 'pitch', [[30, '30°'], [35, '35°'], [40, '40°']], rebuild);
   seg('c-fin', 'fin', [['sosna', 'sama sosna'], ['biel', 'sosna + białe opaski'], ['nieb', 'niebieski'], ['niebb', 'niebieski + białe okna']], rebuild);
   seg('c-pas', 'pas', [['belka', 'biała belka z ząbkami'], ['deski', 'ząbki na końcach desek']], rebuild);
-  seg('c-szyby', 'szyby', [['wariant', 'jak w wariancie'], ['2', '2'], ['3', '3'], ['6', '6'], ['1', '1']], rebuild);
+  seg('c-szyby', 'szyby', [['wariant', 'jak w wariancie'], ['2', '2: kwadrat u góry'], ['3', '3'], ['6', '6'], ['1', '1']], rebuild);
   seg('c-bok', 'bok', [['86', 'szerokie 86,5'], ['40', 'wąskie 40']], rebuild);
   seg('c-trs', 'trs', [['nie', 'bez'], ['tak', 'pasek nad oknami i drzwiami']], rebuild);
   seg('c-depth', 'depth', [[150, '150 z zewnątrz'], [170, '170 z zewnątrz']], rebuild);
