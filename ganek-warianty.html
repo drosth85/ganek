@@ -504,7 +504,9 @@ function facade(vk, mode) {
   dimH(b, G.x0, G.x1, -52, '412 z zewnątrz (wewn. 352)');
   // heights from the ground: floor, sills, heads, transoms, ceiling
   chainV(b, 832, [0, 30, ...ops.flatMap(o => [o.yb, o.yb + o.h]), 265]);
-  dimV(b, 262, 0, rY, '', true); TX(b, 254, rY - 40, `kalenica ${Math.round(rY)}`, 13, 'end');
+  dimV(b, 262, 0, rY, '', true);
+  b.push(`<rect x="166" y="${n(y(rY - 30))}" width="92" height="18" rx="3" fill="#fffffff0"/>`);
+  TX(b, 254, rY - 44, `kalenica ${Math.round(rY)}`, 13, 'end');
   dimV(b, 238, 0, eY, `okap ${Math.round(eY)}`, true);
   TX(b, 560, -88, 'wysokości od terenu; podłoga ganku 30, sufit 265 (235 nad podłogą)', 12, 'middle', '#6f665d');
   return `<svg viewBox="130 110 790 650" xmlns="http://www.w3.org/2000/svg">${b.join('')}</svg>`;
