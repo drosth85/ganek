@@ -35,6 +35,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#cfe3f4;font:14px/1.45
   <div class="row"><span class="l">Pod szczytem</span><span class="seg" id="c-pas"></span></div>
   <div class="row"><span class="l">Naświetla</span><span class="seg" id="c-trs"></span></div>
   <div class="row"><span class="l">Szyby frontu</span><span class="seg" id="c-szyby"></span></div>
+  <div class="row"><span class="l">Okno w boku</span><span class="seg" id="c-bok"></span></div>
   <div class="row"><span class="l">Głębokość</span><span class="seg" id="c-depth"></span></div>
   <div class="hint">Przeciągnij: obrót · Shift + przeciągnij lub prawy przycisk: przesunięcie · kółko lub dwa palce: zbliżenie. Wymiary w skali, dom według pomiarów i szacunków ze zdjęć.</div>
 </div>
@@ -46,7 +47,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#cfe3f4;font:14px/1.45
 // Order: symmetric from narrowest to widest windows, asymmetric last.
 // Side window (right wall) is always the largest catalog size that fits: 865 x 1175, 6 panes.
 const DOOR = { t: 'door', x: 532, w: 120, yb: 30, h: 210, asym: 1 };
-const SIDE = [{ t: 'win', x: 146.75, w: 86.5, yb: 122.5, h: 117.5, c: 2, r: 3 }];
+const SIDE = [{ t: 'win', x: 131.75, w: 86.5, yb: 122.5, h: 117.5, c: 2, r: 3 }];
 const BUDGET_NOTE = 'Budżet to szacunek na oko: ceny brutto z VAT, bez montażu, sosna, szyba zespolona, szprosy. Drzwi u stolarza mają największy rozrzut.';
 const order = (rows, sum) => `<p class="note"><b>Do zamówienia</b> (szer. × wys. w cm):</p><ul class="note">${rows.map(r => `<li>${r}</li>`).join('')}</ul><p class="note"><b>Razem okna + drzwi: ${sum}</b>. ${BUDGET_NOTE}</p>`;
 const ROW_SIDE = 'prawy bok: okno <b>86,5 × 117,5</b> (katalogowe 865 × 1175), 6 szyb · 2 200–3 200 zł';
@@ -115,9 +116,9 @@ const V = {
   },
 };
 
-const st = { v: 'A', eave: 'rynna', pitch: 30, fin: 'biel', gw: 'kapliczka', pas: 'belka', trs: 'nie', szyby: 'wariant', depth: 150, cam: 'p45' };
+const st = { v: 'A', eave: 'rynna', pitch: 30, fin: 'biel', gw: 'kapliczka', pas: 'belka', trs: 'nie', szyby: 'wariant', bok: '86', depth: 150, cam: 'p45' };
 const q = new URLSearchParams(location.search);
-['v', 'eave', 'fin', 'gw', 'pas', 'trs', 'szyby', 'cam'].forEach(k => { if (q.get(k)) st[k] = q.get(k); });
+['v', 'eave', 'fin', 'gw', 'pas', 'trs', 'szyby', 'bok', 'cam'].forEach(k => { if (q.get(k)) st[k] = q.get(k); });
 ['pitch', 'depth'].forEach(k => { if (q.get(k)) st[k] = +q.get(k); });
 
 const HOUSE = { len: 1513, depth: 730, eave: 282, edge: 284, ridge: 580, ov: 45, soffit: 265 };
@@ -377,6 +378,8 @@ const VV = k => {
   let v = V[k];
   if (!v) return v;
   if (st.szyby !== 'wariant') v = { ...v, front: v.front.map(o => o.t === 'win' && !o.tr ? panes(o, st.szyby) : o) };
+  // narrow side window option: same 40 x 117.5, 3-pane window as the front of variant A, centred on the wall
+  if (String(st.bok) === '40') v = { ...v, side: v.side.map(o => o.t === 'win' ? { ...o, x: 175 - 20, w: 40, c: 1, r: 3, top: undefined } : o) };
   if (st.trs === 'tak') v = { ...v, front: withTr(v.front), side: withTr(v.side) };
   return v;
 };
@@ -400,7 +403,8 @@ function buildPorch() {
   fm(g, 0, 12, 30, top, -3, 0, mat(p.post)); fm(g, W - 12, W, 30, top, -3, 0, mat(p.post));
   // side walls (depth minus front wall); right one with window(s) centered
   const sideLen = D - wall, rm = rightMap(D), lm = leftMap(D);
-  const sideOpen = v.side.filter(o => o.t === 'win').map(o => ({ u: wall + sideLen / 2 - o.w / 2, w: o.w, yb: o.yb, h: o.h, o }));
+  // side window(s) centred on the whole side wall, as seen from outside
+  const sideOpen = v.side.filter(o => o.t === 'win').map(o => ({ u: D / 2 - o.w / 2, w: o.w, yb: o.yb, h: o.h, o }));
   const shift = (m) => (gg, u0, u1, y0, y1, d0, d1, mm) => m(gg, u0 + wall, u1 + wall, y0, y1, d0, d1, mm);
   boardsWall(g, shift(rm), sideLen, sideOpen.map(s => ({ ...s, u: s.u - wall })), 30, top, wall, p);
   sideOpen.forEach(s => windowAt(g, rm, s.o, s.u, p));
@@ -562,6 +566,7 @@ function ui() {
   seg('c-fin', 'fin', [['sosna', 'sama sosna'], ['biel', 'sosna + białe opaski'], ['nieb', 'niebieski'], ['niebb', 'niebieski + białe okna']], rebuild);
   seg('c-pas', 'pas', [['belka', 'biała belka z ząbkami'], ['deski', 'ząbki na końcach desek']], rebuild);
   seg('c-szyby', 'szyby', [['wariant', 'jak w wariancie'], ['2', '2'], ['3', '3'], ['6', '6'], ['1', '1']], rebuild);
+  seg('c-bok', 'bok', [['86', 'szerokie 86,5'], ['40', 'wąskie 40']], rebuild);
   seg('c-trs', 'trs', [['nie', 'bez'], ['tak', 'pasek nad oknami i drzwiami']], rebuild);
   seg('c-depth', 'depth', [[150, '150 z zewnątrz'], [170, '170 z zewnątrz']], rebuild);
 }
