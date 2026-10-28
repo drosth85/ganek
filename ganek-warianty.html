@@ -60,6 +60,7 @@ ul.note{margin-top:0}
     <div><span class="l">Wykończenie</span><span class="seg" id="c-fin"></span></div>
     <div><span class="l">Pod szczytem</span><span class="seg" id="c-pas"></span></div>
     <div><span class="l">Pasek naświetli nad oknami i drzwiami</span><span class="seg" id="c-trs"></span></div>
+    <div><span class="l">Szyby w oknach frontu</span><span class="seg" id="c-szyby"></span></div>
     <div id="c-v-bar" hidden><span class="l">Wariant</span><span class="seg" id="c-v2"></span></div>
   </div>
 
@@ -115,7 +116,7 @@ ul.note{margin-top:0}
 <script>
 const T = 620, y = v => T - v, n = v => Math.round(v * 10) / 10;
 const fmt = v => String(n(v)).replace('.', ',');
-const st = { v: 'A', pitch: 35, fin: 'biel', gw: 'kapliczka', pas: 'belka', trs: 'nie', eave: 'rynna' };
+const st = { v: 'A', pitch: 35, fin: 'biel', gw: 'kapliczka', pas: 'belka', trs: 'nie', szyby: 'wariant', eave: 'rynna' };
 
 const HOUSE = { edge: 284, ridge: 580, pitch: 36, len: 1513, blue: '#a9c6e8', line: '#93b2d9', trim: '#f5f2ea', roof: '#6c2535', gutter: '#4a3027', fascia: '#7a2e2a' };
 const G = { x0: 386, x1: 798, xc: 592, W: 412, wall: 30, D: 150, plate: 315, ov: 35, t: 22 };
@@ -151,21 +152,6 @@ const V = {
         <li><b>Plus:</b> symetryczny front, najwięcej pełnej ściany. <b>Minus:</b> okna 40 czytają się raczej jak doświetla przy drzwiach niż okna.</li>
       </ul>
       ${order(['front: 2 × okno <b>40 × 117,5</b>, 3 szyby, nietypowe (u stolarza) · 2 × 1 500–2 300 zł', ROW_SIDE, ROW_DOOR], 'około 14–23 tys. zł')}`
-  },
-  B: {
-    name: 'B · Dwa okna 40, 2 szyby', short: 'jak A, okna na 2 szyby: duża tafla i górny pas',
-    front: [
-      { t: 'win', x: 482, w: 40, yb: 122.5, h: 117.5, c: 1, r: 1, top: { h: 40, c: 1 } },
-      DOOR,
-      { t: 'win', x: 662, w: 40, yb: 122.5, h: 117.5, c: 1, r: 1, top: { h: 40, c: 1 } },
-    ],
-    posts: [], side: SIDE,
-    info: `<h3>B · Dwa okna 40, 2 szyby</h3>
-      <ul>
-        <li>Układ jak w A, ale okna frontowe mają 2 szyby: dużą taflę na dole i niski pas u góry, oddzielone jednym poziomym szprosem na tej samej wysokości w obu oknach. Prawy bok: okno 86,5 na 6 szyb.</li>
-        <li><b>Plus:</b> lepszy widok z wnętrza, łatwiejsze mycie, prostsza stolarka. <b>Minus:</b> mniej „wiejsko” niż okna z szprosami.</li>
-      </ul>
-      ${order(['front: 2 × okno <b>40 × 117,5</b>, 2 szyby, nietypowe (u stolarza) · 2 × 1 400–2 100 zł', ROW_SIDE, ROW_DOOR], 'około 14–22,5 tys. zł')}`
   },
   F: {
     name: 'F · Dwa okna katalogowe 56,5', short: 'drzwi 120 i dwa okna 56,5 × 117,5, szafa węższa o 10',
@@ -225,11 +211,27 @@ function withTr(list) {
     ({ t: 'win', x: o.x, w: o.w, yb: TR.head, h: trTop() - TR.head, c: trCols(o.w), r: 1, tr: 1 }));
   return [...list, ...tr];
 }
+// Pane-count override for the front windows (the side window always keeps 6 panes).
+function panes(o, n) {
+  const q = { ...o, top: undefined };
+  n = String(n);
+  if (n === '1') return { ...q, c: 1, r: 1 };
+  if (n === '2') return { ...q, c: 1, r: 1, top: { h: 40, c: 1 } };
+  if (n === '3') return o.w < 70 ? { ...q, c: 1, r: 3 } : { ...q, c: 3, r: 1 };
+  return { ...q, c: 2, r: 3 };
+}
 const VV = k => {
-  const v = V[k];
-  if (!v || st.trs !== 'tak') return v;
-  return { ...v, front: withTr(v.front), side: withTr(v.side) };
+  let v = V[k];
+  if (!v) return v;
+  if (st.szyby !== 'wariant') v = { ...v, front: v.front.map(o => o.t === 'win' && !o.tr ? panes(o, st.szyby) : o) };
+  if (st.trs === 'tak') v = { ...v, front: withTr(v.front), side: withTr(v.side) };
+  return v;
 };
+function szybyInfo() {
+  if (st.szyby === 'wariant') return '';
+  const d = { '1': '1 szyba (jedna tafla)', '2': '2 szyby (duża tafla i górny pas)', '3': '3 szyby (w wąskich oknach jedna nad drugą, w szerokich obok siebie)', '6': '6 szyb (2 × 3)' }[st.szyby];
+  return `<p class="note" style="background:#eef2f6;border-radius:6px;padding:6px 10px"><b>Szyby w oknach frontu:</b> ${d}. Opis poniżej podaje liczbę szyb z wariantu, wymiary okien się nie zmieniają. Okno w prawym boku zostaje na 6 szyb. Cena zmienia się niewiele: każdy szpros to kilka procent ceny okna.</p>`;
+}
 function trInfo(k) {
   if (st.trs !== 'tak') return '';
   const n = V[k].front.length + V[k].side.length, h = trTop() - TR.head;
@@ -553,6 +555,7 @@ function render() {
   seg('c-pitch', 'pitch', st.eave === 'rynna' ? [[30, '30°'], [35, '35° jak dom'], [40, '40° wiejski']] : [[30, '30°'], [33, '33°'], [35, '35° jak dom']]);
   if (st.eave === 'projekt' && st.pitch > 35) st.pitch = 35;
   seg('c-fin', 'fin', [['sosna', 'sama sosna'], ['biel', 'sosna + białe opaski'], ['nieb', 'niebieski jak dom'], ['niebb', 'niebieski + białe okna i drzwi']]);
+  seg('c-szyby', 'szyby', [['wariant', 'jak w wariancie'], ['2', '2'], ['3', '3'], ['6', '6'], ['1', '1']]);
   seg('c-trs', 'trs', [['nie', 'bez'], ['tak', 'z paskiem']]);
   seg('c-pas', 'pas', [['belka', 'biała belka z ząbkami'], ['deski', 'ząbki na końcach desek szczytu']]);
   seg('c-v', 'v', Object.keys(V).map(k => [k, V[k].name]));
@@ -564,7 +567,7 @@ function render() {
   document.getElementById('d-front').innerHTML = facade(st.v, 'ganek');
   document.getElementById('d-plan').innerHTML = plan(st.v);
   document.getElementById('d-side').innerHTML = sideView(st.v);
-  document.getElementById('d-info').innerHTML = trInfo(st.v) + V[st.v].info;
+  document.getElementById('d-info').innerHTML = szybyInfo() + trInfo(st.v) + V[st.v].info;
 }
 render();
 
@@ -575,7 +578,7 @@ addEventListener('scroll', syncBar, { passive: true }); addEventListener('resize
 // export mode: ?ex=A&m=full|ganek&pitch=35&fin=biel renders a single drawing for PNG export
 (() => {
   const q = new URLSearchParams(location.search); if (!q.get('ex')) return;
-  ['pitch', 'fin', 'gw', 'pas', 'eave', 'trs'].forEach(k => { if (q.get(k)) st[k] = isNaN(+q.get(k)) ? q.get(k) : +q.get(k); });
+  ['pitch', 'fin', 'gw', 'pas', 'eave', 'trs', 'szyby'].forEach(k => { if (q.get(k)) st[k] = isNaN(+q.get(k)) ? q.get(k) : +q.get(k); });
   const k = q.get('ex') === 'dzis' ? '' : q.get('ex');
   document.body.style.background = '#fff';
   const defs = document.querySelector('svg defs').parentNode.outerHTML;

@@ -34,6 +34,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#cfe3f4;font:14px/1.45
   <div class="row"><span class="l">Wykończenie</span><span class="seg" id="c-fin"></span></div>
   <div class="row"><span class="l">Pod szczytem</span><span class="seg" id="c-pas"></span></div>
   <div class="row"><span class="l">Naświetla</span><span class="seg" id="c-trs"></span></div>
+  <div class="row"><span class="l">Szyby frontu</span><span class="seg" id="c-szyby"></span></div>
   <div class="row"><span class="l">Głębokość</span><span class="seg" id="c-depth"></span></div>
   <div class="hint">Przeciągnij: obrót · Shift + przeciągnij lub prawy przycisk: przesunięcie · kółko lub dwa palce: zbliżenie. Wymiary w skali, dom według pomiarów i szacunków ze zdjęć.</div>
 </div>
@@ -65,21 +66,6 @@ const V = {
         <li><b>Plus:</b> symetryczny front, najwięcej pełnej ściany. <b>Minus:</b> okna 40 czytają się raczej jak doświetla przy drzwiach niż okna.</li>
       </ul>
       ${order(['front: 2 × okno <b>40 × 117,5</b>, 3 szyby, nietypowe (u stolarza) · 2 × 1 500–2 300 zł', ROW_SIDE, ROW_DOOR], 'około 14–23 tys. zł')}`
-  },
-  B: {
-    name: 'B · Dwa okna 40, 2 szyby', short: 'jak A, okna na 2 szyby: duża tafla i górny pas',
-    front: [
-      { t: 'win', x: 482, w: 40, yb: 122.5, h: 117.5, c: 1, r: 1, top: { h: 40, c: 1 } },
-      DOOR,
-      { t: 'win', x: 662, w: 40, yb: 122.5, h: 117.5, c: 1, r: 1, top: { h: 40, c: 1 } },
-    ],
-    posts: [], side: SIDE,
-    info: `<h3>B · Dwa okna 40, 2 szyby</h3>
-      <ul>
-        <li>Układ jak w A, ale okna frontowe mają 2 szyby: dużą taflę na dole i niski pas u góry, oddzielone jednym poziomym szprosem na tej samej wysokości w obu oknach. Prawy bok: okno 86,5 na 6 szyb.</li>
-        <li><b>Plus:</b> lepszy widok z wnętrza, łatwiejsze mycie, prostsza stolarka. <b>Minus:</b> mniej „wiejsko” niż okna z szprosami.</li>
-      </ul>
-      ${order(['front: 2 × okno <b>40 × 117,5</b>, 2 szyby, nietypowe (u stolarza) · 2 × 1 400–2 100 zł', ROW_SIDE, ROW_DOOR], 'około 14–22,5 tys. zł')}`
   },
   F: {
     name: 'F · Dwa okna katalogowe 56,5', short: 'drzwi 120 i dwa okna 56,5 × 117,5, szafa węższa o 10',
@@ -129,9 +115,9 @@ const V = {
   },
 };
 
-const st = { v: 'A', eave: 'rynna', pitch: 30, fin: 'biel', gw: 'kapliczka', pas: 'belka', trs: 'nie', depth: 150, cam: 'p45' };
+const st = { v: 'A', eave: 'rynna', pitch: 30, fin: 'biel', gw: 'kapliczka', pas: 'belka', trs: 'nie', szyby: 'wariant', depth: 150, cam: 'p45' };
 const q = new URLSearchParams(location.search);
-['v', 'eave', 'fin', 'gw', 'pas', 'trs', 'cam'].forEach(k => { if (q.get(k)) st[k] = q.get(k); });
+['v', 'eave', 'fin', 'gw', 'pas', 'trs', 'szyby', 'cam'].forEach(k => { if (q.get(k)) st[k] = q.get(k); });
 ['pitch', 'depth'].forEach(k => { if (q.get(k)) st[k] = +q.get(k); });
 
 const HOUSE = { len: 1513, depth: 730, eave: 282, edge: 284, ridge: 580, ov: 45, soffit: 265 };
@@ -378,10 +364,21 @@ function withTr(list) {
     ({ t: 'win', x: o.x, w: o.w, yb: TR.head, h: trTop() - TR.head, c: trCols(o.w), r: 1, tr: 1 }));
   return [...list, ...tr];
 }
+// Pane-count override for the front windows (the side window always keeps 6 panes).
+function panes(o, n) {
+  const q = { ...o, top: undefined };
+  n = String(n);
+  if (n === '1') return { ...q, c: 1, r: 1 };
+  if (n === '2') return { ...q, c: 1, r: 1, top: { h: 40, c: 1 } };
+  if (n === '3') return o.w < 70 ? { ...q, c: 1, r: 3 } : { ...q, c: 3, r: 1 };
+  return { ...q, c: 2, r: 3 };
+}
 const VV = k => {
-  const v = V[k];
-  if (!v || st.trs !== 'tak') return v;
-  return { ...v, front: withTr(v.front), side: withTr(v.side) };
+  let v = V[k];
+  if (!v) return v;
+  if (st.szyby !== 'wariant') v = { ...v, front: v.front.map(o => o.t === 'win' && !o.tr ? panes(o, st.szyby) : o) };
+  if (st.trs === 'tak') v = { ...v, front: withTr(v.front), side: withTr(v.side) };
+  return v;
 };
 
 function buildPorch() {
@@ -564,6 +561,7 @@ function ui() {
   seg('c-pitch', 'pitch', [[30, '30°'], [35, '35°'], [40, '40°']], rebuild);
   seg('c-fin', 'fin', [['sosna', 'sama sosna'], ['biel', 'sosna + białe opaski'], ['nieb', 'niebieski'], ['niebb', 'niebieski + białe okna']], rebuild);
   seg('c-pas', 'pas', [['belka', 'biała belka z ząbkami'], ['deski', 'ząbki na końcach desek']], rebuild);
+  seg('c-szyby', 'szyby', [['wariant', 'jak w wariancie'], ['2', '2'], ['3', '3'], ['6', '6'], ['1', '1']], rebuild);
   seg('c-trs', 'trs', [['nie', 'bez'], ['tak', 'pasek nad oknami i drzwiami']], rebuild);
   seg('c-depth', 'depth', [[150, '150 z zewnątrz'], [170, '170 z zewnątrz']], rebuild);
 }
