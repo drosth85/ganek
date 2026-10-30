@@ -25,6 +25,10 @@ h3{margin:2px 0 6px;font-size:16px}
 .pickbox{background:#fff6e0;border:2px solid #e0b24a;border-radius:10px;padding:10px 14px;margin:8px 0 12px;line-height:1.5}
 .pickbox button{margin-left:6px;border:1px solid #c99a2e;background:#fff;border-radius:7px;padding:4px 10px;cursor:pointer;font:inherit;font-weight:600}
 .pick{font-size:13px;color:#a06d00;font-weight:700}
+.pickbox::after{content:"";display:block;clear:both}
+.pickimg{float:right;width:300px;margin:0 0 6px 14px;text-decoration:none;color:var(--mut);font-size:12px;line-height:1.35}
+.pickimg img{width:100%;display:block;border-radius:7px;margin-bottom:4px}
+@media(max-width:700px){.pickimg{float:none;display:block;width:100%;margin:0 0 8px}}
 .card p{margin:4px 0 0;color:var(--mut);font-size:14px}
 svg{width:100%;height:auto;display:block}
 .det{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;margin-top:10px}
@@ -67,7 +71,7 @@ ul.note{margin-top:0}
   <p class="sub"><a href="ganek-3d.html" style="color:var(--acc);font-weight:600">Model 3D do obracania →</a></p>
   <p class="sub">Szkic proporcji w skali na podstawie pomiarów z 28.10.2026 i projektu z 2022 r. Służy do wyczucia bryły, nie jest projektem wykonawczym.</p>
 
-  <div class="pickbox"><b>★ Nasz wybór:</b> wariant A (drzwi 120 i dwa okna 40), sosna + białe opaski, dach 30°, okap na linii rynny, bez naświetli, szyby z kwadratem u góry, w prawym boku szerokie okno 86,5. Pod szczytem ząbki na końcach desek. Gwiazdka ★ przy przełącznikach oznacza wybraną opcję. <button id="b-pick">Pokaż nasz wybór</button></div>
+  <div class="pickbox"><a href="wybrany_A.jpg" target="_blank" class="pickimg"><img src="wybrany_A.jpg" alt="Wizualizacja wybranego wariantu A" loading="lazy"><span>Wizualizacja (Gemini) wariantu A. Zrobiona przy dachu 35°, wybrany jest 30°. Kliknij, aby powiększyć.</span></a><b>★ Nasz wybór:</b> wariant A (drzwi 120 i dwa okna 40), sosna + białe opaski, dach 30°, okap na linii rynny, bez naświetli, szyby z kwadratem u góry, w prawym boku szerokie okno 86,5. Pod szczytem ząbki na końcach desek. Gwiazdka ★ przy przełącznikach oznacza wybraną opcję. <button id="b-pick">Pokaż nasz wybór</button></div>
 
   <div class="ctrl" id="ctrl">
     <button class="tog" id="c-tog">☰ Opcje <span class="sum" id="c-sum"></span></button>
@@ -510,10 +514,11 @@ function chainV(b, x, ys, left) {
   ys.forEach(v => L(b, x - 5, v, x + 5, v, '#6f665d', 1));
   for (let i = 0; i < ys.length - 1; i++) TX(b, left ? x - 7 : x + 7, (ys[i] + ys[i + 1]) / 2 - 4, fmt2(ys[i + 1] - ys[i]), 12, left ? 'end' : 'start');
 }
-// size label on an opening, rotated for narrow ones
+// size label on an opening, rotated for narrow ones; window labels sit on the wall below the sill,
+// the door label on the solid bottom panel, so no label covers the glass
 function sizeLabel(b, o) {
-  const s = `${fmt2(o.w)} × ${fmt2(o.h)}`, rot = o.w < 60, cx = o.x + o.w / 2, cy = o.yb + o.h * (o.t === 'door' ? 0.3 : 0.5);
-  const tw = s.length * 6.6 + 8;
+  const s = `${fmt2(o.w)} × ${fmt2(o.h)}`, rot = o.w < 60, cx = o.x + o.w / 2, tw = s.length * 6.6 + 8;
+  const cy = o.t === 'door' ? o.yb + o.h * 0.3 : o.tr ? o.yb + o.h * 0.5 : o.yb - 8 - (rot ? tw / 2 : 8);
   b.push(`<g transform="translate(${n(cx)},${n(y(cy))})${rot ? ' rotate(-90)' : ''}"><rect x="${n(-tw / 2)}" y="-9" width="${n(tw)}" height="15" rx="3" fill="#fffffff2" stroke="#6f665d" stroke-width="0.5"/><text x="0" y="3" font-size="11.5" text-anchor="middle" fill="#2b2622" font-family="-apple-system,system-ui,sans-serif">${s}</text></g>`);
 }
 
