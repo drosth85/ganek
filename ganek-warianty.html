@@ -35,6 +35,16 @@ li{margin:2px 0}
 ul.note{margin-top:0}
 .k{display:inline-block;min-width:22px;padding:0 6px;border-radius:5px;background:#efe6da;font-weight:600;text-align:center}
 @media(max-width:860px){.grid,.det{grid-template-columns:1fr}}
+.tog{display:none;width:100%;border:0;background:none;padding:2px 0;font:inherit;font-weight:600;font-size:15px;color:var(--ink);text-align:left;cursor:pointer}
+.tog .sum{font-weight:400;color:var(--mut);font-size:13px}
+@media(max-width:700px){
+  .tog{display:block}
+  .ctrl{padding:8px 12px;gap:10px}
+  .ctrl:not(.open) > div{display:none}
+  .ctrl.open{max-height:75vh;overflow-y:auto}
+  .seg{flex-wrap:wrap}
+  .ctrl span.l{display:block;margin:0 0 4px}
+}
 </style>
 </head>
 <body>
@@ -59,7 +69,8 @@ ul.note{margin-top:0}
 
   <div class="pickbox"><b>★ Nasz wybór:</b> wariant A (drzwi 120 i dwa okna 40), sosna + białe opaski, dach 30°, okap na linii rynny, bez naświetli, szyby z kwadratem u góry, w prawym boku szerokie okno 86,5. Pod szczytem ząbki na końcach desek. Gwiazdka ★ przy przełącznikach oznacza wybraną opcję. <button id="b-pick">Pokaż nasz wybór</button></div>
 
-  <div class="ctrl">
+  <div class="ctrl" id="ctrl">
+    <button class="tog" id="c-tog">☰ Opcje <span class="sum" id="c-sum"></span></button>
     <div><span class="l">Okap ganku</span><span class="seg" id="c-eave"></span></div>
     <div><span class="l">Kąt dachu ganku</span><span class="seg" id="c-pitch"></span></div>
     <div><span class="l">Wykończenie</span><span class="seg" id="c-fin"></span></div>
@@ -637,9 +648,12 @@ function render() {
   document.getElementById('d-front').innerHTML = facade(st.v, 'ganek');
   document.getElementById('d-plan').innerHTML = plan(st.v);
   document.getElementById('d-side').innerHTML = sideView(st.v);
+  const same = Object.keys(WYBOR).every(k => String(st[k]) === String(WYBOR[k]));
+  document.getElementById('c-sum').textContent = `· wariant ${st.v}, ${st.pitch}°${same ? ' · ★ nasz wybór' : ' · zmienione'} ${document.getElementById('ctrl').classList.contains('open') ? '▴ zwiń' : '▾ rozwiń'}`;
   document.getElementById('d-info').innerHTML = bokInfo() + szybyInfo() + trInfo(st.v) + V[st.v].info;
 }
 render();
+document.getElementById('c-tog').onclick = () => { document.getElementById('ctrl').classList.toggle('open'); render(); };
 document.getElementById('b-pick').onclick = () => { Object.assign(st, WYBOR); render(); };
 
 // variant picker joins the sticky bar once its own box is scrolled past

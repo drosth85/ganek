@@ -597,6 +597,8 @@ function ui() {
   seg('c-depth', 'depth', [[150, '150 z zewnątrz'], [170, '170 z zewnątrz']], rebuild);
 }
 document.getElementById('tog').onclick = () => { const p = document.getElementById('panel'); p.classList.toggle('hide'); document.getElementById('tog').textContent = p.classList.contains('hide') ? 'pokaż panel' : 'ukryj panel'; };
+// phones: the panel would cover the model, start hidden
+if (innerWidth <= 700) { document.getElementById('panel').classList.add('hide'); document.getElementById('tog').textContent = 'pokaż panel'; }
 if (q.get('nopanel')) { document.getElementById('panel').classList.add('hide'); document.getElementById('tog').style.display = 'none'; }
 
 function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
