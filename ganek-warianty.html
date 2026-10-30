@@ -22,6 +22,9 @@ h3{margin:2px 0 6px;font-size:16px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .card.sel{outline:2px solid var(--acc)}
+.pickbox{background:#fff6e0;border:2px solid #e0b24a;border-radius:10px;padding:10px 14px;margin:8px 0 12px;line-height:1.5}
+.pickbox button{margin-left:6px;border:1px solid #c99a2e;background:#fff;border-radius:7px;padding:4px 10px;cursor:pointer;font:inherit;font-weight:600}
+.pick{font-size:13px;color:#a06d00;font-weight:700}
 .card p{margin:4px 0 0;color:var(--mut);font-size:14px}
 svg{width:100%;height:auto;display:block}
 .det{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;margin-top:10px}
@@ -54,15 +57,15 @@ ul.note{margin-top:0}
   <p class="sub"><a href="ganek-3d.html" style="color:var(--acc);font-weight:600">Model 3D do obracania →</a></p>
   <p class="sub">Szkic proporcji w skali na podstawie pomiarów z 28.10.2026 i projektu z 2022 r. Służy do wyczucia bryły, nie jest projektem wykonawczym.</p>
 
+  <div class="pickbox"><b>★ Nasz wybór:</b> wariant A (drzwi 120 i dwa okna 40), sosna + białe opaski, dach 30°, okap na linii rynny, bez naświetli, szyby z kwadratem u góry, w prawym boku szerokie okno 86,5. Pod szczytem ząbki na końcach desek. Gwiazdka ★ przy przełącznikach oznacza wybraną opcję. <button id="b-pick">Pokaż nasz wybór</button></div>
+
   <div class="ctrl">
     <div><span class="l">Okap ganku</span><span class="seg" id="c-eave"></span></div>
     <div><span class="l">Kąt dachu ganku</span><span class="seg" id="c-pitch"></span></div>
     <div><span class="l">Wykończenie</span><span class="seg" id="c-fin"></span></div>
-    <div><span class="l">Pod szczytem</span><span class="seg" id="c-pas"></span></div>
     <div><span class="l">Pasek naświetli nad oknami i drzwiami</span><span class="seg" id="c-trs"></span></div>
     <div><span class="l">Szyby w oknach frontu</span><span class="seg" id="c-szyby"></span></div>
     <div><span class="l">Okno w prawym boku</span><span class="seg" id="c-bok"></span></div>
-    <div><span class="l">Wokół okien</span><span class="seg" id="c-op"></span></div>
     <div id="c-v-bar" hidden><span class="l">Wariant</span><span class="seg" id="c-v2"></span></div>
   </div>
 
@@ -118,7 +121,11 @@ ul.note{margin-top:0}
 <script>
 const T = 620, y = v => T - v, n = v => Math.round(v * 10) / 10;
 const fmt = v => String(n(v)).replace('.', ',');
-const st = { v: 'A', pitch: 35, fin: 'biel', gw: 'kapliczka', pas: 'belka', trs: 'nie', szyby: '2', bok: '86', op: 'listwa', eave: 'rynna' };
+// our chosen configuration (28.10/30.10): starred in the switches, restored by the "nasz wybór" button
+const WYBOR = { v: 'A', eave: 'rynna', pitch: 30, fin: 'biel', trs: 'nie', szyby: '2', bok: '86' };
+const star = (key, v) => String(WYBOR[key]) === String(v) ? ' ★' : '';
+// gable: teeth on the gable board ends (no beam); white trims around openings, pine sills
+const st = { ...WYBOR, gw: 'kapliczka', pas: 'deski', op: 'opaski' };
 
 const HOUSE = { edge: 284, ridge: 580, pitch: 36, len: 1513, blue: '#a9c6e8', line: '#93b2d9', trim: '#f5f2ea', roof: '#6c2535', gutter: '#4a3027', fascia: '#7a2e2a' };
 const G = { x0: 386, x1: 798, xc: 592, W: 412, wall: 30, D: 150, plate: 315, ov: 35, t: 22 };
@@ -212,6 +219,17 @@ function panes(o, n) {
   if (n === '3') return o.w < 70 ? { ...q, c: 1, r: 3 } : { ...q, c: 3, r: 1 };
   return { ...q, c: 2, r: 3 };
 }
+// trims of neighbouring openings (window 10 cm from the door) narrow down and keep a small gap of bare boards
+const OP_GAP = 2;
+function trimGaps(list) {
+  const ops = list.filter(o => (o.t === 'win' || o.t === 'door') && !o.tr).sort((a, b) => a.x - b.x);
+  const side = g => g == null ? OP : Math.min(OP, (g - OP_GAP) / 2);
+  return list.map(o => {
+    const i = ops.indexOf(o); if (i < 0) return o;
+    const l = ops[i - 1], r = ops[i + 1];
+    return { ...o, opL: side(l && o.x - (l.x + l.w)), opR: side(r && r.x - (o.x + o.w)) };
+  });
+}
 const VV = k => {
   let v = V[k];
   if (!v) return v;
@@ -221,6 +239,7 @@ const VV = k => {
   // the square-top division is repeated on the side window
   if (String(st.szyby) === '2') v = { ...v, side: v.side.map(o => o.t === 'win' && !o.tr ? panes(o, '2') : o) };
   if (st.trs === 'tak') v = { ...v, front: withTr(v.front), side: withTr(v.side) };
+  v = { ...v, front: trimGaps(v.front) };
   return v;
 };
 function bokInfo() {
@@ -235,7 +254,7 @@ function szybyInfo() {
 function trInfo(k) {
   if (st.trs !== 'tak') return '';
   const n = V[k].front.length + V[k].side.length, h = trTop() - TR.head;
-  const tight = h < 24 ? ` Przy białej belce i dachu ${st.pitch}° ząbki belki schodzą nisko, więc naświetle ma tylko ${fmt(h)} cm. Z ząbkami na końcach desek albo przy dachu 40° będzie miało około 25 cm.` : '';
+  const tight = h < 24 ? ` Przy dachu ${st.pitch}° ząbki szczytu schodzą nisko, więc naświetle ma tylko ${fmt(h)} cm.` : '';
   return `<p class="note" style="background:#f3ece2;border-radius:6px;padding:6px 10px"><b>Włączony pasek naświetli:</b> okna i drzwi zostają w pełnej wysokości, a nad każdym otworem stoi naświetle stałe <b>${fmt(h)} cm</b> wysokości, aż do sufitu ganku (265 nad terenem, wyżej się nie da, bo tam jest sufit).${tight} Okno z naświetlem można zamówić jako jedną ramę: 117,5 + ${fmt(h)} daje około ${fmt(117.5 + h)} cm, blisko katalogowej wysokości 143,5. Razem ${n} naświetli, około ${n * 600}–${n * 1000} zł więcej niż w budżecie poniżej (szacunek na oko).</p>`;
 }
 
@@ -269,9 +288,10 @@ function glass(b, x, yb, w, h, c, r, top, p) {
 const OP = 10;
 function opaska(b, x, o, p) {
   if (st.op !== 'opaski') return;
-  R(b, x - OP, o.yb, OP, o.h + OP, p.post, p.dark, 0.5);
-  R(b, x + o.w, o.yb, OP, o.h + OP, p.post, p.dark, 0.5);
-  R(b, x - OP, o.yb + o.h, o.w + 2 * OP, OP, p.post, p.dark, 0.5);
+  const l = o.opL ?? OP, r = o.opR ?? OP;
+  R(b, x - l, o.yb, l, o.h + OP, p.post, p.dark, 0.5);
+  R(b, x + o.w, o.yb, r, o.h + OP, p.post, p.dark, 0.5);
+  R(b, x - l, o.yb + o.h, o.w + l + r, OP, p.post, p.dark, 0.5);
 }
 function win(b, o, p, x) {
   x = x ?? o.x;
@@ -280,7 +300,10 @@ function win(b, o, p, x) {
   const f = o.tr ? 4 : 6;
   glass(b, x + f, o.yb + f, o.w - 2 * f, o.h - 2 * f, o.c, o.r, o.top, p);
   if (!o.tr && o.yb > 40) {
-    if (st.op === 'opaski') R(b, x - OP - 3, o.yb - 5, o.w + 2 * OP + 6, 5, p.frame, p.dark, 0.5); // pine sill
+    if (st.op === 'opaski') { // pine sill, no overhang next to a narrowed trim
+      const sl = (o.opL ?? OP) + ((o.opL ?? OP) < OP ? 0 : 3), sr = (o.opR ?? OP) + ((o.opR ?? OP) < OP ? 0 : 3);
+      R(b, x - sl, o.yb - 5, o.w + sl + sr, 5, p.frame, p.dark, 0.5);
+    }
     else R(b, x - 5, o.yb - 5, o.w + 10, 5, p.sill, p.dark, 0.5);
   }
 }
@@ -589,7 +612,7 @@ function plan(vk) {
 
 function seg(id, key, opts) {
   const el = document.getElementById(id);
-  el.innerHTML = opts.map(([v, l]) => `<button data-v="${v}" class="${String(st[key]) === String(v) ? 'on' : ''}">${l}</button>`).join('');
+  el.innerHTML = opts.map(([v, l]) => `<button data-v="${v}" class="${String(st[key]) === String(v) ? 'on' : ''}">${l}${star(key, v)}</button>`).join('');
   el.onclick = e => {
     const btn = e.target.closest('button'); if (!btn) return;
     st[key] = isNaN(+btn.dataset.v) ? btn.dataset.v : +btn.dataset.v;
@@ -603,15 +626,13 @@ function render() {
   if (st.eave === 'projekt' && st.pitch > 35) st.pitch = 35;
   seg('c-fin', 'fin', [['sosna', 'sama sosna'], ['biel', 'sosna + białe opaski'], ['nieb', 'niebieski jak dom'], ['niebb', 'niebieski + białe okna i drzwi']]);
   seg('c-szyby', 'szyby', [['wariant', 'jak w wariancie'], ['2', '2: kwadrat u góry'], ['3', '3'], ['6', '6'], ['1', '1']]);
-  seg('c-op', 'op', [['listwa', 'biała listwa pozioma + białe parapety'], ['opaski', 'białe opaski, parapety sosnowe']]);
   seg('c-bok', 'bok', [['86', 'szerokie 86,5'], ['40', 'wąskie 40 jak na froncie A']]);
   seg('c-trs', 'trs', [['nie', 'bez'], ['tak', 'z paskiem']]);
-  seg('c-pas', 'pas', [['belka', 'biała belka z ząbkami'], ['deski', 'ząbki na końcach desek szczytu']]);
   seg('c-v', 'v', Object.keys(V).map(k => [k, V[k].name]));
   seg('c-v2', 'v', Object.keys(V).map(k => [k, V[k].name]));
   const cards = [['', 'Dziś', 'bez ganku']].concat(Object.keys(V).map(k => [k, V[k].name, V[k].short]));
   document.getElementById('multi').innerHTML = cards.map(([k, name, s]) =>
-    `<div class="card${k && k === st.v ? ' sel' : ''}" data-k="${k}" style="cursor:${k ? 'pointer' : 'default'}"><h3>${name}</h3>${facade(k, 'full')}<p>${s}</p></div>`).join('');
+    `<div class="card${k && k === st.v ? ' sel' : ''}" data-k="${k}" style="cursor:${k ? 'pointer' : 'default'}"><h3>${name}${k === WYBOR.v ? ' <span class="pick">★ nasz wybór</span>' : ''}</h3>${facade(k, 'full')}<p>${s}</p></div>`).join('');
   document.querySelectorAll('#multi .card[data-k]').forEach(c => c.onclick = () => { if (c.dataset.k) { st.v = c.dataset.k; render(); } });
   document.getElementById('d-front').innerHTML = facade(st.v, 'ganek');
   document.getElementById('d-plan').innerHTML = plan(st.v);
@@ -619,6 +640,7 @@ function render() {
   document.getElementById('d-info').innerHTML = bokInfo() + szybyInfo() + trInfo(st.v) + V[st.v].info;
 }
 render();
+document.getElementById('b-pick').onclick = () => { Object.assign(st, WYBOR); render(); };
 
 // variant picker joins the sticky bar once its own box is scrolled past
 const vBar = document.getElementById('c-v-bar'), vBox = document.getElementById('c-v-box'), topBar = vBar.parentElement;

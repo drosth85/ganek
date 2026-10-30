@@ -20,6 +20,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#cfe3f4;font:14px/1.45
 .hint{color:var(--mut);font-size:12px;margin-top:6px}
 #tog{position:fixed;right:12px;top:12px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;font:inherit}
 .panel.hide{display:none}
+.pickbox{background:#fff6e0;border:2px solid #e0b24a;border-radius:8px;padding:6px 9px;margin:0 0 8px;font-size:13px;line-height:1.45}
+.pickbox button{margin-left:4px;border:1px solid #c99a2e;background:#fff;border-radius:6px;padding:2px 8px;cursor:pointer;font:inherit;font-weight:600}
 </style>
 </head>
 <body>
@@ -27,16 +29,15 @@ html,body{margin:0;height:100%;overflow:hidden;background:#cfe3f4;font:14px/1.45
 <div class="panel" id="panel">
   <h1>Ganek · model 3D</h1>
   <div class="hint" style="margin:0 0 6px"><a href="ganek-warianty.html" style="color:var(--acc);font-weight:600">← Rysunki 2D, opisy i budżety</a></div>
+  <div class="pickbox"><b>★ Nasz wybór:</b> A, sosna + białe opaski, dach 30°, bez naświetli, szyby z kwadratem u góry, szerokie okno w boku. <button id="b-pick">Pokaż</button></div>
   <div class="row"><span class="l">Wariant</span><span class="seg" id="c-v"></span></div>
   <div class="row"><span class="l">Widok</span><span class="seg" id="c-cam"></span></div>
   <div class="row"><span class="l">Okap ganku</span><span class="seg" id="c-eave"></span></div>
   <div class="row"><span class="l">Kąt dachu</span><span class="seg" id="c-pitch"></span></div>
   <div class="row"><span class="l">Wykończenie</span><span class="seg" id="c-fin"></span></div>
-  <div class="row"><span class="l">Pod szczytem</span><span class="seg" id="c-pas"></span></div>
   <div class="row"><span class="l">Naświetla</span><span class="seg" id="c-trs"></span></div>
   <div class="row"><span class="l">Szyby frontu</span><span class="seg" id="c-szyby"></span></div>
   <div class="row"><span class="l">Okno w boku</span><span class="seg" id="c-bok"></span></div>
-  <div class="row"><span class="l">Wokół okien</span><span class="seg" id="c-op"></span></div>
   <div class="row"><span class="l">Głębokość</span><span class="seg" id="c-depth"></span></div>
   <div class="hint">Przeciągnij: obrót · Shift + przeciągnij lub prawy przycisk: przesunięcie · kółko lub dwa palce: zbliżenie. Wymiary w skali, dom według pomiarów i szacunków ze zdjęć.</div>
 </div>
@@ -103,7 +104,10 @@ const V = {
   },
 };
 
-const st = { v: 'A', eave: 'rynna', pitch: 35, fin: 'biel', gw: 'kapliczka', pas: 'belka', trs: 'nie', szyby: '2', bok: '86', op: 'listwa', depth: 150, cam: 'p45' };
+// our chosen configuration (28.10/30.10): starred in the switches, restored by the "nasz wybór" button
+const WYBOR = { v: 'A', eave: 'rynna', pitch: 30, fin: 'biel', trs: 'nie', szyby: '2', bok: '86' };
+const star = (key, v) => String(WYBOR[key]) === String(v) ? ' ★' : '';
+const st = { ...WYBOR, gw: 'kapliczka', pas: 'deski', op: 'opaski', depth: 150, cam: 'p45' };
 const q = new URLSearchParams(location.search);
 ['v', 'eave', 'fin', 'gw', 'pas', 'trs', 'szyby', 'bok', 'op', 'cam'].forEach(k => { if (q.get(k)) st[k] = q.get(k); });
 ['pitch', 'depth'].forEach(k => { if (q.get(k)) st[k] = +q.get(k); });
@@ -231,18 +235,23 @@ function windowAt(g, map, o, u, p) {
   for (let j = 1; j < o.r; j++) { const yy = gy + j * mh / o.r; map(g, gx, gx + gw, yy - 1.5, yy + 1.5, 6.5, 9.5, fm); }
   opaska3d(g, map, o, u, p);
   if (!o.tr && o.yb > 40) {
-    if (st.op === 'opaski') map(g, u - 13, u + o.w + 13, o.yb - 5, o.yb, -5, 6, mat(p.frame)); // pine sill
+    if (st.op === 'opaski') { // pine sill, no overhang next to a narrowed trim
+      const sl = (o.opL ?? OP) + ((o.opL ?? OP) < OP ? 0 : 3), sr = (o.opR ?? OP) + ((o.opR ?? OP) < OP ? 0 : 3);
+      map(g, u - sl, u + o.w + sr, o.yb - 5, o.yb, -5, 6, mat(p.frame));
+    }
     else map(g, u - 5, u + o.w + 5, o.yb - 5, o.yb, -5, 6, mat(p.sill));
   }
 }
 
 // white trim (opaska) on the sides and top of an opening, used with st.op === 'opaski'
+const OP = 10;
 function opaska3d(g, map, o, u, p) {
   if (st.op !== 'opaski') return;
   const m = mat(p.post);
-  map(g, u - 10, u, o.yb, o.yb + o.h + 10, -2, 0, m);
-  map(g, u + o.w, u + o.w + 10, o.yb, o.yb + o.h + 10, -2, 0, m);
-  map(g, u - 10, u + o.w + 10, o.yb + o.h, o.yb + o.h + 10, -2, 0, m);
+  const l = o.opL ?? OP, r = o.opR ?? OP;
+  map(g, u - l, u, o.yb, o.yb + o.h + OP, -2, 0, m);
+  map(g, u + o.w, u + o.w + r, o.yb, o.yb + o.h + OP, -2, 0, m);
+  map(g, u - l, u + o.w + r, o.yb + o.h, o.yb + o.h + OP, -2, 0, m);
 }
 function doorAt(g, map, o, u, p) {
   opaska3d(g, map, o, u, p);
@@ -378,6 +387,17 @@ function panes(o, n) {
   if (n === '3') return o.w < 70 ? { ...q, c: 1, r: 3 } : { ...q, c: 3, r: 1 };
   return { ...q, c: 2, r: 3 };
 }
+// trims of neighbouring openings (window 10 cm from the door) narrow down and keep a small gap of bare boards
+const OP_GAP = 2;
+function trimGaps(list) {
+  const ops = list.filter(o => (o.t === 'win' || o.t === 'door') && !o.tr).sort((a, b) => a.x - b.x);
+  const side = g => g == null ? OP : Math.min(OP, (g - OP_GAP) / 2);
+  return list.map(o => {
+    const i = ops.indexOf(o); if (i < 0) return o;
+    const l = ops[i - 1], r = ops[i + 1];
+    return { ...o, opL: side(l && o.x - (l.x + l.w)), opR: side(r && r.x - (o.x + o.w)) };
+  });
+}
 const VV = k => {
   let v = V[k];
   if (!v) return v;
@@ -387,6 +407,7 @@ const VV = k => {
   // the square-top division is repeated on the side window
   if (String(st.szyby) === '2') v = { ...v, side: v.side.map(o => o.t === 'win' && !o.tr ? panes(o, '2') : o) };
   if (st.trs === 'tak') v = { ...v, front: withTr(v.front), side: withTr(v.side) };
+  v = { ...v, front: trimGaps(v.front) };
   return v;
 };
 
@@ -557,7 +578,7 @@ canvas.addEventListener('touchend', e => { if (e.touches.length < 2) pinch = nul
 // ---- UI ----
 function seg(id, key, opts, after) {
   const el = document.getElementById(id);
-  el.innerHTML = opts.map(([v, l]) => `<button data-v="${v}" class="${String(st[key]) === String(v) ? 'on' : ''}">${l}</button>`).join('');
+  el.innerHTML = opts.map(([v, l]) => `<button data-v="${v}" class="${String(st[key]) === String(v) ? 'on' : ''}">${l}${star(key, v)}</button>`).join('');
   el.onclick = e => {
     const b = e.target.closest('button'); if (!b) return;
     st[key] = isNaN(+b.dataset.v) ? b.dataset.v : +b.dataset.v;
@@ -570,9 +591,7 @@ function ui() {
   seg('c-eave', 'eave', [['rynna', 'na linii rynny'], ['projekt', '50 cm wyżej']], rebuild);
   seg('c-pitch', 'pitch', [[30, '30°'], [35, '35°'], [40, '40°']], rebuild);
   seg('c-fin', 'fin', [['sosna', 'sama sosna'], ['biel', 'sosna + białe opaski'], ['nieb', 'niebieski'], ['niebb', 'niebieski + białe okna']], rebuild);
-  seg('c-pas', 'pas', [['belka', 'biała belka z ząbkami'], ['deski', 'ząbki na końcach desek']], rebuild);
   seg('c-szyby', 'szyby', [['wariant', 'jak w wariancie'], ['2', '2: kwadrat u góry'], ['3', '3'], ['6', '6'], ['1', '1']], rebuild);
-  seg('c-op', 'op', [['listwa', 'biała listwa + białe parapety'], ['opaski', 'białe opaski, sosnowe parapety']], rebuild);
   seg('c-bok', 'bok', [['86', 'szerokie 86,5'], ['40', 'wąskie 40']], rebuild);
   seg('c-trs', 'trs', [['nie', 'bez'], ['tak', 'pasek nad oknami i drzwiami']], rebuild);
   seg('c-depth', 'depth', [[150, '150 z zewnątrz'], [170, '170 z zewnątrz']], rebuild);
@@ -582,6 +601,7 @@ if (q.get('nopanel')) { document.getElementById('panel').classList.add('hide'); 
 
 function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize);
+document.getElementById('b-pick').onclick = () => { Object.assign(st, WYBOR); rebuild(); ui(); };
 setCam(st.cam); rebuild(); ui(); resize();
 (function loop() { updateCam(); renderer.render(scene, camera); requestAnimationFrame(loop); })();
 </script>
