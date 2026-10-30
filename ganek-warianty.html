@@ -517,8 +517,9 @@ function chainV(b, x, ys, left) {
 // size label on an opening, rotated for narrow ones; window labels sit on the wall below the sill,
 // the door label on the solid bottom panel, so no label covers the glass
 function sizeLabel(b, o) {
-  const s = `${fmt2(o.w)} × ${fmt2(o.h)}`, rot = o.w < 60, cx = o.x + o.w / 2, tw = s.length * 6.6 + 8;
-  const cy = o.t === 'door' ? o.yb + o.h * 0.3 : o.tr ? o.yb + o.h * 0.5 : o.yb - 8 - (rot ? tw / 2 : 8);
+  // transom labels go above the transom, past the gable teeth, always horizontal
+  const s = `${fmt2(o.w)} × ${fmt2(o.h)}`, rot = o.w < 60 && !o.tr, cx = o.x + o.w / 2, tw = s.length * 6.6 + 8;
+  const cy = o.t === 'door' ? o.yb + o.h * 0.3 : o.tr ? o.yb + o.h + 26 : o.yb - 8 - (rot ? tw / 2 : 8);
   b.push(`<g transform="translate(${n(cx)},${n(y(cy))})${rot ? ' rotate(-90)' : ''}"><rect x="${n(-tw / 2)}" y="-9" width="${n(tw)}" height="15" rx="3" fill="#fffffff2" stroke="#6f665d" stroke-width="0.5"/><text x="0" y="3" font-size="11.5" text-anchor="middle" fill="#2b2622" font-family="-apple-system,system-ui,sans-serif">${s}</text></g>`);
 }
 
