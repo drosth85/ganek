@@ -39,13 +39,13 @@ li{margin:2px 0}
 ul.note{margin-top:0}
 .k{display:inline-block;min-width:22px;padding:0 6px;border-radius:5px;background:#efe6da;font-weight:600;text-align:center}
 @media(max-width:860px){.grid,.det{grid-template-columns:1fr}}
-.tog{display:none;width:100%;border:0;background:none;padding:2px 0;font:inherit;font-weight:600;font-size:15px;color:var(--ink);text-align:left;cursor:pointer}
+.tog{display:block;width:100%;border:0;background:none;padding:2px 0;font:inherit;font-weight:600;font-size:15px;color:var(--ink);text-align:left;cursor:pointer}
 .tog .sum{font-weight:400;color:var(--mut);font-size:13px}
+/* options bar collapses to one line on every screen */
+.ctrl:not(.open) > div{display:none}
+.ctrl.open{max-height:75vh;overflow-y:auto}
 @media(max-width:700px){
-  .tog{display:block}
   .ctrl{padding:8px 12px;gap:10px}
-  .ctrl:not(.open) > div{display:none}
-  .ctrl.open{max-height:75vh;overflow-y:auto}
   .seg{flex-wrap:wrap}
   .ctrl span.l{display:block;margin:0 0 4px}
 }
