@@ -48,59 +48,61 @@ html,body{margin:0;height:100%;overflow:hidden;background:#cfe3f4;font:14px/1.45
 // ---- variant data copied from ganek-warianty.html (2D) ----
 // Order: symmetric from narrowest to widest windows, asymmetric last.
 // Side window (right wall) is always the largest catalog size that fits: 865 x 1175, 6 panes.
-const DOOR = { t: 'door', x: 532, w: 120, yb: 30, h: 210, asym: 1 };
-const SIDE = [{ t: 'win', x: 131.75, w: 86.5, yb: 122.5, h: 117.5, c: 2, r: 3 }];
+const DOOR = { t: 'door', x: 541.5, w: 101, yb: 30, h: 207, single: 1 };
+// entrance door colour: slightly darker than the house front blue (#a9c6e8)
+const DOOR_BLUE = { frame: '#88a8d0', leaf: '#94b3d9', dark: '#6584ab' };
+const SIDE = [{ t: 'win', x: 131.75, w: 86.5, yb: 119.5, h: 117.5, c: 2, r: 3 }];
 const BUDGET_NOTE = 'Budżet to szacunek na oko: ceny brutto z VAT, bez montażu, sosna, szyba zespolona, szprosy. Drzwi u stolarza mają największy rozrzut.';
 const order = (rows, sum) => `<p class="note"><b>Do zamówienia</b> (szer. × wys. w cm):</p><ul class="note">${rows.map(r => `<li>${r}</li>`).join('')}</ul><p class="note"><b>Razem okna + drzwi: ${sum}</b>. ${BUDGET_NOTE}</p>`;
 const ROW_SIDE = 'prawy bok: okno <b>86,5 × 117,5</b> (katalogowe 865 × 1175), 6 szyb · 2 200–3 200 zł';
-const ROW_DOOR = 'drzwi <b>120 × 210</b> dwuskrzydłowe 80 + 40 według Waszego wzoru, u stolarza · 9 000–15 000 zł';
+const ROW_DOOR = 'drzwi <b>101 × 207</b> jednoskrzydłowe, bez dostawki, niebieskie, u stolarza · 7 000–12 000 zł';
 const V = {
   A: {
-    name: 'A · Dwa okna 40, 3 szyby', short: 'drzwi 120, dwa wąskie okna 40 po 3 szyby',
+    name: 'A · Dwa okna 40, 3 szyby', short: 'drzwi 101, dwa wąskie okna 40 po 3 szyby',
     front: [
-      { t: 'win', x: 482, w: 40, yb: 122.5, h: 117.5, c: 1, r: 3 },
+      { t: 'win', x: 479.5, w: 40, yb: 119.5, h: 117.5, c: 1, r: 3 },
       DOOR,
-      { t: 'win', x: 662, w: 40, yb: 122.5, h: 117.5, c: 1, r: 3 },
+      { t: 'win', x: 664.5, w: 40, yb: 119.5, h: 117.5, c: 1, r: 3 },
     ],
     posts: [], side: SIDE,
     info: `<h3>A · Dwa okna 40, 3 szyby</h3>
       <ul>
-        <li>Drzwi 120 na środku, po bokach wąskie okna 40 × 117,5 na 3 szyby jedna nad drugą, 10 cm od drzwi. Szafa 60 mieści się bez kolizji. Prawy bok: okno 86,5 na 6 szyb. Lewy bok pełny.</li>
+        <li>Drzwi 101 × 207 na środku, jednoskrzydłowe, bez dostawki. Po bokach wąskie okna 40 × 117,5 na 3 szyby jedna nad drugą, 22 cm od drzwi (dwie opaski po 10 cm i 2 cm deski). Szafa 60 mieści się bez kolizji. Prawy bok: okno 86,5 na 6 szyb. Lewy bok pełny.</li>
         <li><b>Plus:</b> symetryczny front, najwięcej pełnej ściany. <b>Minus:</b> okna 40 czytają się raczej jak doświetla przy drzwiach niż okna.</li>
       </ul>
-      ${order(['front: 2 × okno <b>40 × 117,5</b>, 3 szyby, nietypowe (u stolarza) · 2 × 1 500–2 300 zł', ROW_SIDE, ROW_DOOR], 'około 14–23 tys. zł')}`
+      ${order(['front: 2 × okno <b>40 × 117,5</b>, 3 szyby, nietypowe (u stolarza) · 2 × 1 500–2 300 zł', ROW_SIDE, ROW_DOOR], 'około 12–20 tys. zł')}`
   },
   F: {
-    name: 'F · Dwa okna katalogowe 56,5', short: 'drzwi 120 i dwa okna 56,5 × 117,5, szafa węższa o 10',
+    name: 'F · Dwa okna katalogowe 56,5', short: 'drzwi 101 i dwa okna 56,5 × 117,5, szafa węższa o 13',
     front: [
-      { t: 'win', x: 465.5, w: 56.5, yb: 122.5, h: 117.5, c: 2, r: 3 },
+      { t: 'win', x: 463, w: 56.5, yb: 119.5, h: 117.5, c: 2, r: 3 },
       DOOR,
-      { t: 'win', x: 662, w: 56.5, yb: 122.5, h: 117.5, c: 2, r: 3 },
+      { t: 'win', x: 664.5, w: 56.5, yb: 119.5, h: 117.5, c: 2, r: 3 },
     ],
-    posts: [], wardrobe: 50, side: SIDE,
+    posts: [], wardrobe: 47, side: SIDE,
     info: `<h3>F · Dwa okna katalogowe 56,5</h3>
       <ul>
-        <li>Drzwi 120 na środku, po obu stronach okno 56,5 × 117,5 na 6 szyb, 10 cm od drzwi, symetrycznie. Prawy bok: okno 86,5 na 6 szyb.</li>
-        <li>Okno od strony szafy (z lewej patrząc z zewnątrz, z prawej patrząc od środka) zachodzi na szafę 60 o 10 cm, dlatego <b>szafa ma 50 zamiast 60</b>. Na rzucie przerywana linia pokazuje dawną szerokość. Większe okno katalogowe, 86,5, już się nie zmieści: szafa mogłaby mieć wtedy najwyżej 20 cm.</li>
-        <li><b>Plus:</b> wszystkie okna z katalogu, front symetryczny i jaśniejszy niż w A. <b>Minus:</b> szafa traci 10 cm.</li>
+        <li>Drzwi 101 × 207 na środku, jednoskrzydłowe, bez dostawki. Po obu stronach okno 56,5 × 117,5 na 6 szyb, 22 cm od drzwi (dwie opaski po 10 cm i 2 cm deski), symetrycznie. Prawy bok: okno 86,5 na 6 szyb.</li>
+        <li>Okno od strony szafy (z lewej patrząc z zewnątrz, z prawej patrząc od środka) zachodzi na szafę 60 o 13 cm, dlatego <b>szafa ma 47 zamiast 60</b>. Na rzucie przerywana linia pokazuje dawną szerokość. Większe okno katalogowe, 86,5, już się nie zmieści: szafa mogłaby mieć wtedy najwyżej 17 cm.</li>
+        <li><b>Plus:</b> wszystkie okna z katalogu, front symetryczny i jaśniejszy niż w A. <b>Minus:</b> szafa traci 13 cm.</li>
       </ul>
-      ${order(['front: 2 × okno <b>56,5 × 117,5</b> (katalogowe 565 × 1175), 6 szyb · 2 × 1 700–2 500 zł', ROW_SIDE, ROW_DOOR], 'około 14,5–23 tys. zł')}`
+      ${order(['front: 2 × okno <b>56,5 × 117,5</b> (katalogowe 565 × 1175), 6 szyb · 2 × 1 700–2 500 zł', ROW_SIDE, ROW_DOOR], 'około 12,5–20 tys. zł')}`
   },
   A2: {
     name: 'A2 · Asymetria: okna 56,5 i 86,5', short: 'okna katalogowe: z lewej wąskie 56,5 na 3 szyby, z prawej szerokie 86,5 na 6 szyb',
     front: [
-      { t: 'win', x: 465.5, w: 56.5, yb: 122.5, h: 117.5, c: 1, r: 3 },
+      { t: 'win', x: 463, w: 56.5, yb: 119.5, h: 117.5, c: 1, r: 3 },
       DOOR,
-      { t: 'win', x: 662, w: 86.5, yb: 122.5, h: 117.5, c: 2, r: 3 },
+      { t: 'win', x: 664.5, w: 86.5, yb: 119.5, h: 117.5, c: 2, r: 3 },
     ],
-    posts: [], wardrobe: 50, side: SIDE,
+    posts: [], wardrobe: 47, side: SIDE,
     info: `<h3>A2 · Asymetria: okna 56,5 i 86,5</h3>
       <ul>
-        <li>Drzwi 120 na środku, z lewej wąskie okno katalogowe 56,5 × 117,5 na 3 szyby, z prawej szerokie okno katalogowe 86,5 × 117,5 na 6 szyb, oba 10 cm od drzwi. Prawy bok: okno 86,5 na 6 szyb, takie samo jak z prawej na froncie.</li>
-        <li>Wąskie okno zachodzi na szafę 60 o 10 cm, dlatego <b>szafa ma 50</b> (jak w F). Szersze okno katalogowe z prawej, 116,5, już się nie zmieści.</li>
-        <li><b>Plus:</b> wszystkie okna z katalogu, dużo światła z prawej, gdzie nie ma szafy. <b>Minus:</b> front asymetryczny, szafa traci 10 cm.</li>
+        <li>Drzwi 101 × 207 na środku, jednoskrzydłowe, bez dostawki. Z lewej wąskie okno katalogowe 56,5 × 117,5 na 3 szyby, z prawej szerokie okno katalogowe 86,5 × 117,5 na 6 szyb, oba 22 cm od drzwi (dwie opaski po 10 cm i 2 cm deski). Prawy bok: okno 86,5 na 6 szyb, takie samo jak z prawej na froncie.</li>
+        <li>Wąskie okno zachodzi na szafę 60 o 13 cm, dlatego <b>szafa ma 47</b> (jak w F). Szersze okno katalogowe z prawej, 116,5, już się nie zmieści.</li>
+        <li><b>Plus:</b> wszystkie okna z katalogu, dużo światła z prawej, gdzie nie ma szafy. <b>Minus:</b> front asymetryczny, szafa traci 13 cm.</li>
       </ul>
-      ${order(['front z lewej: okno <b>56,5 × 117,5</b> (katalogowe 565 × 1175), 3 szyby · 1 700–2 500 zł', 'front z prawej i prawy bok: 2 × okno <b>86,5 × 117,5</b> (katalogowe 865 × 1175), 6 szyb · 2 × 2 200–3 200 zł', ROW_DOOR], 'około 15–24 tys. zł')}`
+      ${order(['front z lewej: okno <b>56,5 × 117,5</b> (katalogowe 565 × 1175), 3 szyby · 1 700–2 500 zł', 'front z prawej i prawy bok: 2 × okno <b>86,5 × 117,5</b> (katalogowe 865 × 1175), 6 szyb · 2 × 2 200–3 200 zł', ROW_DOOR], 'około 13–21 tys. zł')}`
   },
 };
 
@@ -235,8 +237,8 @@ function windowAt(g, map, o, u, p) {
   for (let j = 1; j < o.r; j++) { const yy = gy + j * mh / o.r; map(g, gx, gx + gw, yy - 1.5, yy + 1.5, 6.5, 9.5, fm); }
   opaska3d(g, map, o, u, p);
   if (!o.tr && o.yb > 40) {
-    if (st.op === 'opaski') { // pine sill, no overhang next to a narrowed trim
-      const sl = (o.opL ?? OP) + ((o.opL ?? OP) < OP ? 0 : 3), sr = (o.opR ?? OP) + ((o.opR ?? OP) < OP ? 0 : 3);
+    if (st.op === 'opaski') { // pine sill, no overhang on the side facing a neighbouring opening
+      const sl = (o.opL ?? OP) + (o.nbL ? 0 : 3), sr = (o.opR ?? OP) + (o.nbR ? 0 : 3);
       map(g, u - sl, u + o.w + sr, o.yb - 5, o.yb, -5, 6, mat(p.frame));
     }
     else map(g, u - 5, u + o.w + 5, o.yb - 5, o.yb, -5, 6, mat(p.sill));
@@ -255,7 +257,7 @@ function opaska3d(g, map, o, u, p) {
 }
 function doorAt(g, map, o, u, p) {
   opaska3d(g, map, o, u, p);
-  const f = 6, fm = mat(p.frame, { roughness: 0.6 }), lm = mat(p.leaf, { roughness: 0.7 }), gm = mat(C.glassDark, { roughness: 0.1, metalness: 0.4 });
+  const f = 6, fm = mat(o.single ? DOOR_BLUE.frame : p.frame, { roughness: 0.6 }), lm = mat(o.single ? DOOR_BLUE.leaf : p.leaf, { roughness: 0.7 }), gm = mat(C.glassDark, { roughness: 0.1, metalness: 0.4 });
   map(g, u, u + o.w, o.yb + o.h - f, o.yb + o.h, 4, 12, fm);
   map(g, u, u + f, o.yb, o.yb + o.h, 4, 12, fm);
   map(g, u + o.w - f, u + o.w, o.yb, o.yb + o.h, 4, 12, fm);
@@ -364,9 +366,9 @@ function kapliczka3d(g, cx, yb, gh, D, p) {
   const gl = new THREE.Mesh(new THREE.ShapeGeometry(archShape(cx, yb, w, h)), glassMat); gl.position.z = D + 6.2; g.add(gl);
 }
 
-// Optional transom strip: openings keep their size (heads at 240), no rail; a fixed transom
+// Optional transom strip: openings keep their size (heads at 237), no rail; a fixed transom
 // sits directly on every opening, up to the inside ceiling (265) but clear of the gable teeth.
-const TR = { head: 240, top: 265 };
+const TR = { head: 237, top: 265 };
 const trCols = w => Math.max(2, Math.round(w / 35));
 const trTop = () => Math.min(TR.top, roofGeom().plate - (st.pas === 'belka' ? 23 : 15));
 function withTr(list) {
@@ -387,7 +389,7 @@ function panes(o, n) {
   if (n === '3') return o.w < 70 ? { ...q, c: 1, r: 3 } : { ...q, c: 3, r: 1 };
   return { ...q, c: 2, r: 3 };
 }
-// trims of neighbouring openings (window 10 cm from the door) narrow down and keep a small gap of bare boards
+// openings stand 22 cm apart: two full 10 cm trims and 2 cm of bare boards; closer ones would narrow their trims
 const OP_GAP = 2;
 function trimGaps(list) {
   const ops = list.filter(o => (o.t === 'win' || o.t === 'door') && !o.tr).sort((a, b) => a.x - b.x);
@@ -395,7 +397,7 @@ function trimGaps(list) {
   return list.map(o => {
     const i = ops.indexOf(o); if (i < 0) return o;
     const l = ops[i - 1], r = ops[i + 1];
-    return { ...o, opL: side(l && o.x - (l.x + l.w)), opR: side(r && r.x - (o.x + o.w)) };
+    return { ...o, opL: side(l && o.x - (l.x + l.w)), opR: side(r && r.x - (o.x + o.w)), nbL: !!l, nbR: !!r };
   });
 }
 const VV = k => {
