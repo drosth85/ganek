@@ -227,22 +227,22 @@ const V = {
       ${order(['drzwi <b>90 × 207</b> z dostawką <b>40 × 207</b> (razem 130 × 207), RAL 5002, u stolarza · 9 000–16 000 zł', ROW_SIDE], 'około 11–19 tys. zł')}`
   },
   E: {
-    name: 'E · Drzwi 90 i okna fix 50', short: 'drzwi 90 niebieskie jak w F, po bokach okna 50 × 120 ze szprosami, w boku 90 × 120',
+    name: 'E · Drzwi 90 i okna fix 50', short: 'drzwi 105 (skrzydło 90) niebieskie jak w F, po bokach okna 50 × 120 ze szprosami, w boku 90 × 120',
     front: [
-      { t: 'win', x: 475, w: 50, yb: 121, h: 120, c: 2, r: 4, fix: 1 },
-      { t: 'door', x: 547, w: 90, yb: 30, h: 211, db: 1, doorW: 90, col: DOOR_F },
-      { t: 'win', x: 659, w: 50, yb: 121, h: 120, c: 2, r: 4, fix: 1 },
+      { t: 'win', x: 477.5, w: 50, yb: 121, h: 120, c: 2, r: 4, fix: 1 },
+      { t: 'door', x: 539.5, w: 105, yb: 30, h: 211, db: 1, doorW: 105, f: 7.5, col: DOOR_F },
+      { t: 'win', x: 656.5, w: 50, yb: 121, h: 120, c: 2, r: 4, fix: 1 },
     ],
-    posts: [], wardrobe: 59,
+    posts: [],
     side: [{ t: 'win', x: 130, w: 90, yb: 121, h: 120, c: 4, r: 4, fix: 1 }],
     info: `<h3>E · Drzwi 90 i okna fix 50</h3>
       <ul>
-        <li>Drzwi 90 × 211 na środku, jak wzór ze zdjęcia, bez dostawki, kolor jak w F: niebieski delikatnie ciemniejszy od frontu domu. Po bokach okna 50 × 120, 22 cm od drzwi. Prawy bok: okno 90 × 120. Wszystkie okna i drzwi mają górę na tej samej wysokości: 241 nad terenem, 211 nad podłogą ganku. Okno w ścianie domu ma górę około 243 (wymiar szacowany ze zdjęć).</li>
+        <li>Drzwi na środku, ościeżnica 105 × 211, skrzydło 90, jak wzór ze zdjęcia, bez dostawki, kolor jak w F: niebieski delikatnie ciemniejszy od frontu domu. Po bokach okna 50 × 120, 12 cm od ościeżnicy: słup 10 × 10 i po 1 cm luzu montażowego, z zewnątrz wspólna biała opaska 12 cm. Prawy bok: okno 90 × 120. Wszystkie okna i drzwi mają górę na tej samej wysokości: 241 nad terenem, 211 nad podłogą ganku. Okno w ścianie domu ma górę około 243 (wymiar szacowany ze zdjęć).</li>
         <li>Okna z <a href="https://www.sklep-ecohouse.pl/produkt/drewniana-witryna-okno-fix-nieotwierane-ze-szprosem/" target="_blank" rel="noopener">Eco-House</a>: drewniane, stałe (nieotwierane), rama 6,5 cm, szprosy przybijane od zewnątrz, surowe do własnego wykończenia. Na froncie 2 × 4 szyby, w boku 4 × 4, czyli układ dwóch okien z frontu obok siebie. Wszystkie szybki identyczne: 17 × 24,5 cm przy szprosie 3 cm. Wszędzie 4 rzędy na tej samej wysokości.</li>
-        <li>Lewe okno zachodzi na szafę 60 o 1 cm, dlatego <b>szafa ma 59</b>. Okno 90 w boku zostawia 30 cm ściany z każdej strony.</li>
+        <li>Szafa 60 mieści się, do lewego okna zostaje 1,5 cm. Okno 90 w boku zostawia 30 cm ściany z każdej strony.</li>
         <li><b>Plus:</b> dużo światła z boku, spójne szprosy, tańsze okna. <b>Minus:</b> otwierają się tylko drzwi, ganek w słońcu będzie się nagrzewał.</li>
       </ul>
-      ${order(['front: 2 × okno fix <b>50 × 120</b>, 2 × 4 szyby, wymiar nietypowy (do wyceny w sklepie), szacunek 2 × 600–900 zł', 'prawy bok: okno fix <b>90 × 120</b>, 4 × 4 szyby, wymiar z oferty sklepu, podział indywidualny (do wyceny), szacunek 700–1 100 zł', 'drzwi <b>90 × 211</b>, niebieskie jak w F, u stolarza · 7 000–12 000 zł'], 'około 9–15 tys. zł')}`
+      ${order(['front: 2 × okno fix <b>50 × 120</b>, 2 × 4 szyby, wymiar nietypowy (do wyceny w sklepie), szacunek 2 × 600–900 zł', 'prawy bok: okno fix <b>90 × 120</b>, 4 × 4 szyby, wymiar z oferty sklepu, podział indywidualny (do wyceny), szacunek 700–1 100 zł', 'drzwi <b>105 × 211</b> (ościeżnica, skrzydło 90), niebieskie jak w F, u stolarza · 7 000–12 000 zł'], 'około 9–15 tys. zł')}`
   },
 };
 const qv = new URLSearchParams(location.search).get('v'); if (V[qv]) st.v = qv;
@@ -274,11 +274,11 @@ function panes(o, n) {
 const OP_GAP = 2;
 function trimGaps(list) {
   const ops = list.filter(o => (o.t === 'win' || o.t === 'door') && !o.tr).sort((a, b) => a.x - b.x);
-  const side = g => g == null ? OP : Math.min(OP, (g - OP_GAP) / 2);
+  const side = (g, o) => g == null ? OP : Math.min(OP, (g - (o.db || o.fix ? 0 : OP_GAP)) / 2);
   return list.map(o => {
     const i = ops.indexOf(o); if (i < 0) return o;
     const l = ops[i - 1], r = ops[i + 1];
-    return { ...o, opL: side(l && o.x - (l.x + l.w)), opR: side(r && r.x - (o.x + o.w)), nbL: !!l, nbR: !!r };
+    return { ...o, opL: side(l && o.x - (l.x + l.w), o), opR: side(r && r.x - (o.x + o.w), o), nbL: !!l, nbR: !!r };
   });
 }
 const VV = k => {
@@ -382,7 +382,7 @@ function doorSingle(b, o, p) {
   R(b, x + w - 16, yb + 95, 3, 14, '#3b3330');
 }
 function doorDb(b, o) {
-  const c = o.col || DOOR_RAL, { x, yb, w, h, doorW } = o, f = 5, lx = x + f, lw = doorW - 2 * f, H = h - f;
+  const c = o.col || DOOR_RAL, { x, yb, w, h, doorW } = o, f = o.f || 5, lx = x + f, lw = doorW - 2 * f, H = h - f;
   R(b, x, yb, w, h, c.frame, c.dark, 0.8);
   // sidelight: one pane over the full height
   if (w > doorW) R(b, x + doorW + 2, yb + f, w - doorW - 2 - f, h - 2 * f, 'url(#gl)');
@@ -662,7 +662,7 @@ function plan(vk) {
     if (o.t === 'win') { b.push(`<line x1="${o.x}" y1="143.5" x2="${o.x + o.w}" y2="143.5" stroke="${ink}" stroke-width="1"/><line x1="${o.x}" y1="146.5" x2="${o.x + o.w}" y2="146.5" stroke="${ink}" stroke-width="1"/>`); }
     else {
       if (o.db) { // hinges next to the fixed sidelight, leaf swings into the porch
-        const hx = o.x + o.doorW, lw = o.doorW;
+        const hx = o.x + o.doorW - (o.f || 0), lw = o.f ? o.doorW - 2 * o.f : o.doorW;
         if (o.w > o.doorW) b.push(`<line x1="${hx}" y1="143.5" x2="${o.x + o.w}" y2="143.5" stroke="${ink}" stroke-width="1"/><line x1="${hx}" y1="146.5" x2="${o.x + o.w}" y2="146.5" stroke="${ink}" stroke-width="1"/>`);
         b.push(`<line x1="${hx}" y1="140" x2="${hx}" y2="${140 - lw}" stroke="${ink}" stroke-width="1.5"/>`);
         b.push(`<path d="M${hx} ${140 - lw} A${lw} ${lw} 0 0 0 ${hx - lw} 140" fill="none" stroke="${ink}" stroke-width="0.8" stroke-dasharray="3 3"/>`);
