@@ -51,6 +51,9 @@ html,body{margin:0;height:100%;overflow:hidden;background:#cfe3f4;font:14px/1.45
 const DOOR = { t: 'door', x: 541.5, w: 101, yb: 30, h: 207, single: 1 };
 // entrance door colour: slightly darker than the house front blue (#a9c6e8)
 const DOOR_BLUE = { frame: '#88a8d0', leaf: '#94b3d9', dark: '#6584ab' };
+// variant D door: 90 wide door + fixed full-glass sidelight 40 on the right, one unit centred on the porch axis, RAL 5002
+const DOOR_DB = { t: 'door', x: 527, w: 130, yb: 30, h: 207, db: 1, doorW: 90 };
+const DOOR_RAL = { frame: '#002c63', leaf: '#00387b', dark: '#001f47', groove: '#3f6aa5' };
 const SIDE = [{ t: 'win', x: 131.75, w: 86.5, yb: 119.5, h: 117.5, c: 2, r: 3 }];
 const BUDGET_NOTE = 'Budżet to szacunek na oko: ceny brutto z VAT, bez montażu, sosna, szyba zespolona, szprosy. Drzwi u stolarza mają największy rozrzut.';
 const order = (rows, sum) => `<p class="note"><b>Do zamówienia</b> (szer. × wys. w cm):</p><ul class="note">${rows.map(r => `<li>${r}</li>`).join('')}</ul><p class="note"><b>Razem okna + drzwi: ${sum}</b>. ${BUDGET_NOTE}</p>`;
@@ -68,7 +71,7 @@ const V = {
     info: `<h3>A · Dwa okna 40, 3 szyby</h3>
       <ul>
         <li>Drzwi 101 × 207 na środku, jednoskrzydłowe, bez dostawki. Po bokach wąskie okna 40 × 117,5 na 3 szyby jedna nad drugą, 22 cm od drzwi (dwie opaski po 10 cm i 2 cm deski). Szafa 60 mieści się bez kolizji. Prawy bok: okno 86,5 na 6 szyb. Lewy bok pełny.</li>
-        <li><b>Plus:</b> symetryczny front, najwięcej pełnej ściany. <b>Minus:</b> okna 40 czytają się raczej jak doświetla przy drzwiach niż okna.</li>
+        <li><b>Plus:</b> symetryczny front, dużo pełnej ściany. <b>Minus:</b> okna 40 czytają się raczej jak doświetla przy drzwiach niż okna.</li>
       </ul>
       ${order(['front: 2 × okno <b>40 × 117,5</b>, 3 szyby, nietypowe (u stolarza) · 2 × 1 500–2 300 zł', ROW_SIDE, ROW_DOOR], 'około 12–20 tys. zł')}`
   },
@@ -103,6 +106,17 @@ const V = {
         <li><b>Plus:</b> wszystkie okna z katalogu, dużo światła z prawej, gdzie nie ma szafy. <b>Minus:</b> front asymetryczny, szafa traci 13 cm.</li>
       </ul>
       ${order(['front z lewej: okno <b>56,5 × 117,5</b> (katalogowe 565 × 1175), 3 szyby · 1 700–2 500 zł', 'front z prawej i prawy bok: 2 × okno <b>86,5 × 117,5</b> (katalogowe 865 × 1175), 6 szyb · 2 × 2 200–3 200 zł', ROW_DOOR], 'około 13–21 tys. zł')}`
+  },
+  D: {
+    name: 'D · Drzwi z dostawką, bez okien', short: 'drzwi 90 + przeszklona dostawka 40 w RAL 5002, front bez okien',
+    front: [DOOR_DB],
+    posts: [], side: SIDE,
+    info: `<h3>D · Drzwi z dostawką, bez okien</h3>
+      <ul>
+        <li>Na froncie tylko drzwi z dostawką, razem 130 × 207, na osi ganku. Drzwi 90 (góra: 6 szyb 3 × 2, dół: panel z pionowymi frezami, klamka z lewej, zawiasy od strony dostawki). Dostawka 40 z prawej, pełne szklenie na całą wysokość, stała. Kolor RAL 5002 (na ekranie przybliżony). Opaska 10 cm wokół całości. Szafa 60 mieści się bez kolizji. Prawy bok: okno 86,5.</li>
+        <li><b>Plus:</b> najwięcej pełnej ściany, najprostszy i najtańszy front, mocny kolorowy akcent. <b>Minus:</b> światło wchodzi z frontu tylko przez dostawkę i szyby w drzwiach, ganek będzie ciemniejszy niż w A, F i A2.</li>
+      </ul>
+      ${order(['drzwi <b>90 × 207</b> z dostawką <b>40 × 207</b> (razem 130 × 207), RAL 5002, u stolarza · 9 000–16 000 zł', ROW_SIDE], 'około 11–19 tys. zł')}`
   },
 };
 
@@ -255,8 +269,33 @@ function opaska3d(g, map, o, u, p) {
   map(g, u + o.w, u + o.w + r, o.yb, o.yb + o.h + OP, -2, 0, m);
   map(g, u - l, u + o.w + r, o.yb + o.h, o.yb + o.h + OP, -2, 0, m);
 }
+function doorDb3d(g, map, o, u) {
+  const { yb, h, w, doorW } = o, f = 5, H = h - f, c = DOOR_RAL;
+  const fm = mat(c.frame, { roughness: 0.6 }), lm = mat(c.leaf, { roughness: 0.6 }), gm = mat(C.glassDark, { roughness: 0.1, metalness: 0.4 });
+  const gr = mat(c.groove), hm = mat('#17171a', { metalness: 0.5, roughness: 0.4 });
+  // unit frame, mullion between door and sidelight, sidelight sill
+  map(g, u, u + w, yb + h - f, yb + h, 4, 12, fm);
+  map(g, u, u + f, yb, yb + h, 4, 12, fm);
+  map(g, u + w - f, u + w, yb, yb + h, 4, 12, fm);
+  map(g, u + doorW - f, u + doorW + 2, yb, yb + h, 4, 12, fm);
+  map(g, u + doorW + 2, u + w - f, yb, yb + f, 4, 12, fm);
+  // sidelight: one pane over the full height
+  map(g, u + doorW + 2, u + w - f, yb + f, yb + h - f, 7.6, 8, gm);
+  // leaf
+  const lx = u + f, lw = doorW - 2 * f, st = lw * 0.13, gx = lx + st, gw = lw - 2 * st, gh = 68, gb = yb + H - 13 - gh, pb = yb + 22, ph = gb - 12.5 - pb;
+  map(g, lx + 0.4, lx + lw - 0.4, yb, yb + H, 7, 12, lm);
+  map(g, gx, gx + gw, gb, gb + gh, 6.6, 7, gm);
+  for (let i = 1; i < 3; i++) { const x = gx + i * gw / 3; map(g, x - 1.5, x + 1.5, gb, gb + gh, 6, 7, lm); }
+  map(g, gx, gx + gw, gb + gh / 2 - 1.5, gb + gh / 2 + 1.5, 6, 7, lm);
+  map(g, gx, gx + gw, pb, pb + ph, 6.7, 7, fm);
+  for (let i = 0; i < 5; i++) map(g, gx + i * gw / 5 + 0.5, gx + (i + 1) * gw / 5 - 0.5, pb + 0.5, pb + ph - 0.5, 6.4, 6.7, lm);
+  // black handle on the left
+  map(g, lx + 3, lx + 6, yb + 88, yb + 112, 5.5, 7, hm);
+  map(g, lx + 3, lx + 15, yb + 103, yb + 105.5, 3, 5.5, hm);
+}
 function doorAt(g, map, o, u, p) {
   opaska3d(g, map, o, u, p);
+  if (o.db) return doorDb3d(g, map, o, u);
   const f = 6, fm = mat(o.single ? DOOR_BLUE.frame : p.frame, { roughness: 0.6 }), lm = mat(o.single ? DOOR_BLUE.leaf : p.leaf, { roughness: 0.7 }), gm = mat(C.glassDark, { roughness: 0.1, metalness: 0.4 });
   map(g, u, u + o.w, o.yb + o.h - f, o.yb + o.h, 4, 12, fm);
   map(g, u, u + f, o.yb, o.yb + o.h, 4, 12, fm);
