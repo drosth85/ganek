@@ -225,6 +225,24 @@ const V = {
       </ul>
       ${order(['drzwi <b>90 × 207</b> z dostawką <b>40 × 207</b> (razem 130 × 207), RAL 5002, u stolarza · 9 000–16 000 zł', ROW_SIDE], 'około 11–19 tys. zł')}`
   },
+  E: {
+    name: 'E · Drzwi 90 i okna fix 50', short: 'drzwi 90 w RAL 5002, po bokach okna 50 × 120 ze szprosami, w boku 120 × 120',
+    front: [
+      { t: 'win', x: 475, w: 50, yb: 123, h: 120, c: 1, r: 4, fix: 1 },
+      { t: 'door', x: 547, w: 90, yb: 30, h: 207, db: 1, doorW: 90 },
+      { t: 'win', x: 659, w: 50, yb: 123, h: 120, c: 1, r: 4, fix: 1 },
+    ],
+    posts: [], wardrobe: 59,
+    side: [{ t: 'win', x: 115, w: 120, yb: 123, h: 120, c: 3, r: 4, fix: 1 }],
+    info: `<h3>E · Drzwi 90 i okna fix 50</h3>
+      <ul>
+        <li>Drzwi 90 × 207 na środku, jak wzór ze zdjęcia, w kolorze RAL 5002 (na ekranie przybliżony), bez dostawki. Po bokach okna 50 × 120, 22 cm od drzwi. Prawy bok: okno 120 × 120. Góra okien na wysokości 243, jak góra okna w ścianie domu (wymiar szacowany ze zdjęć), czyli 6 cm wyżej niż góra drzwi.</li>
+        <li>Okna z <a href="https://www.sklep-ecohouse.pl/produkt/drewniana-witryna-okno-fix-nieotwierane-ze-szprosem/" target="_blank" rel="noopener">Eco-House</a>: drewniane, stałe (nieotwierane), rama 6,5 cm, szprosy przybijane od zewnątrz, surowe do własnego wykończenia. W boku układ jak na zdjęciu sklepu, 3 × 4 szyby. Na froncie 1 × 4, jak wąskie okno z galerii sklepu. Wszędzie 4 rzędy na tej samej wysokości.</li>
+        <li>Lewe okno zachodzi na szafę 60 o 1 cm, dlatego <b>szafa ma 59</b>. Okno 120 w boku zostawia 15 cm ściany z każdej strony, więc opaska dochodzi do słupków narożnych.</li>
+        <li><b>Plus:</b> dużo światła z boku, spójne szprosy, tańsze okna. <b>Minus:</b> otwierają się tylko drzwi, ganek w słońcu będzie się nagrzewał. Góra okien nie pokrywa się z górą drzwi.</li>
+      </ul>
+      ${order(['front: 2 × okno fix <b>50 × 120</b>, 1 × 4 szyby, wymiar nietypowy (do wyceny w sklepie), szacunek 2 × 600–900 zł', 'prawy bok: okno fix <b>120 × 120</b>, 3 × 4 szyby, wymiar nietypowy (do wyceny w sklepie), szacunek 1 100–1 500 zł', 'drzwi <b>90 × 207</b>, RAL 5002, u stolarza · 7 000–12 000 zł'], 'około 9–15 tys. zł')}`
+  },
 };
 const qv = new URLSearchParams(location.search).get('v'); if (V[qv]) st.v = qv;
 
@@ -265,11 +283,11 @@ function trimGaps(list) {
 const VV = k => {
   let v = V[k];
   if (!v) return v;
-  if (st.szyby !== 'wariant') v = { ...v, front: v.front.map(o => o.t === 'win' && !o.tr ? panes(o, st.szyby) : o) };
+  if (st.szyby !== 'wariant') v = { ...v, front: v.front.map(o => o.t === 'win' && !o.tr && !o.fix ? panes(o, st.szyby) : o) };
   // narrow side window option: same 40 x 117.5, 3-pane window as the front of variant A, centred on the wall
   if (String(st.bok) === '40') v = { ...v, side: v.side.map(o => o.t === 'win' ? { ...o, x: 175 - 20, w: 40, c: 1, r: 3, top: undefined } : o) };
   // the square-top division is repeated on the side window
-  if (String(st.szyby) === '2') v = { ...v, side: v.side.map(o => o.t === 'win' && !o.tr ? panes(o, '2') : o) };
+  if (String(st.szyby) === '2') v = { ...v, side: v.side.map(o => o.t === 'win' && !o.tr && !o.fix ? panes(o, '2') : o) };
   if (st.trs === 'tak') v = { ...v, front: withTr(v.front), side: withTr(v.side) };
   v = { ...v, front: trimGaps(v.front) };
   return v;
@@ -279,7 +297,7 @@ function bokInfo() {
   return `<p class="note" style="background:#eef2f6;border-radius:6px;padding:6px 10px"><b>Wąskie okno w prawym boku:</b> zamiast okna 86,5 × 117,5 w boku jest okno <b>40 × 117,5</b> na 3 szyby, takie samo jak na froncie wariantu A (nietypowe, u stolarza, około 1 500–2 300 zł zamiast 2 200–3 200 zł). Okno stoi na środku ściany. Budżet poniżej liczy jeszcze okno 86,5.</p>`;
 }
 function szybyInfo() {
-  if (st.szyby === 'wariant' || st.v === 'D') return '';
+  if (st.szyby === 'wariant' || st.v === 'D' || st.v === 'E') return '';
   const d = { '1': '1 szyba (jedna tafla)', '2': '2 szyby: kwadrat u góry i jedna tafla na dole (w szerokich oknach 2 kwadraty u góry, czyli 3 szyby). Ten sam podział ma okno w prawym boku: 2 kwadraty u góry i tafla na dole', '3': '3 szyby (w wąskich oknach jedna nad drugą, w szerokich obok siebie)', '6': '6 szyb (2 × 3)' }[st.szyby];
   return `<p class="note" style="background:#eef2f6;border-radius:6px;padding:6px 10px"><b>Szyby w oknach frontu:</b> ${d}. Opis poniżej podaje liczbę szyb z wariantu, wymiary okien się nie zmieniają. Przy ustawieniu innym niż 2 okno w prawym boku zostaje na 6 szyb. Cena zmienia się niewiele: każdy szpros to kilka procent ceny okna.</p>`;
 }
@@ -329,7 +347,7 @@ function win(b, o, p, x) {
   x = x ?? o.x;
   opaska(b, x, o, p);
   R(b, x, o.yb, o.w, o.h, p.frame, p.dark, 0.8);
-  const f = o.tr ? 4 : 6;
+  const f = o.fix ? 6.5 : o.tr ? 4 : 6;
   glass(b, x + f, o.yb + f, o.w - 2 * f, o.h - 2 * f, o.c, o.r, o.top, p);
   if (!o.tr && o.yb > 40) {
     if (st.op === 'opaski') { // pine sill, no overhang on the side facing a neighbouring opening
@@ -366,7 +384,7 @@ function doorDb(b, o) {
   const c = DOOR_RAL, { x, yb, w, h, doorW } = o, f = 5, lx = x + f, lw = doorW - 2 * f, H = h - f;
   R(b, x, yb, w, h, c.frame, c.dark, 0.8);
   // sidelight: one pane over the full height
-  R(b, x + doorW + 2, yb + f, w - doorW - 2 - f, h - 2 * f, 'url(#gl)');
+  if (w > doorW) R(b, x + doorW + 2, yb + f, w - doorW - 2 - f, h - 2 * f, 'url(#gl)');
   // leaf, proportions from the catalogue photo: rail 13, glass 68, rail 12.5, boards, bottom rail 22
   R(b, lx, yb, lw, H, c.leaf, c.dark, 0.8);
   const st = lw * 0.13, gx = lx + st, gw = lw - 2 * st, gh = 68, gb = yb + H - 13 - gh, pb = yb + 22, ph = gb - 12.5 - pb;
@@ -552,7 +570,7 @@ function chainV(b, x, ys, left) {
 // the door label on the solid bottom panel, so no label covers the glass
 function sizeLabel(b, o) {
   // transom labels go above the transom, past the gable teeth, always horizontal
-  const s = o.db ? `${fmt2(o.doorW)} + ${fmt2(o.w - o.doorW)} × ${fmt2(o.h)}` : `${fmt2(o.w)} × ${fmt2(o.h)}`, rot = o.w < 60 && !o.tr, cx = o.db ? o.x + o.doorW / 2 : o.x + o.w / 2, tw = s.length * 5.9 + 6;
+  const s = o.db && o.w > o.doorW ? `${fmt2(o.doorW)} + ${fmt2(o.w - o.doorW)} × ${fmt2(o.h)}` : `${fmt2(o.w)} × ${fmt2(o.h)}`, rot = o.w < 60 && !o.tr, cx = o.db ? o.x + o.doorW / 2 : o.x + o.w / 2, tw = s.length * 5.9 + 6;
   const cy = o.t === 'door' ? o.yb + o.h * 0.3 : o.tr ? o.yb + o.h + 26 : o.yb - 8 - (rot ? tw / 2 : 8);
   b.push(`<g transform="translate(${n(cx)},${n(y(cy))})${rot ? ' rotate(-90)' : ''}"><rect x="${n(-tw / 2)}" y="-9" width="${n(tw)}" height="15" rx="3" fill="#fffffff2" stroke="#6f665d" stroke-width="0.5"/><text x="0" y="3" font-size="11.5" text-anchor="middle" fill="#2b2622" font-family="-apple-system,system-ui,sans-serif">${s}</text></g>`);
 }
@@ -574,7 +592,7 @@ function facade(vk, mode) {
   const ops = v.front.filter(o => o.t === 'door' || o.t === 'win');
   ops.filter(o => !o.tr || o.h >= 15).forEach(o => sizeLabel(b, o));
   // widths: wall, gaps and openings along the front; then the overall width
-  chainH(b, [G.x0, G.x1, ...ops.flatMap(o => o.doorW ? [o.x, o.x + o.doorW, o.x + o.w] : [o.x, o.x + o.w])], -16);
+  chainH(b, [G.x0, G.x1, ...ops.flatMap(o => o.doorW && o.w > o.doorW ? [o.x, o.x + o.doorW, o.x + o.w] : [o.x, o.x + o.w])], -16);
   dimH(b, G.x0, G.x1, -52, '412 z zewnątrz (wewn. 352)');
   // heights from the ground: floor, sills, heads, transoms, ceiling
   chainV(b, 832, [0, 30, ...ops.flatMap(o => [o.yb, o.yb + o.h]), 265]);
@@ -644,7 +662,7 @@ function plan(vk) {
     else {
       if (o.db) { // hinges next to the fixed sidelight, leaf swings into the porch
         const hx = o.x + o.doorW, lw = o.doorW;
-        b.push(`<line x1="${hx}" y1="143.5" x2="${o.x + o.w}" y2="143.5" stroke="${ink}" stroke-width="1"/><line x1="${hx}" y1="146.5" x2="${o.x + o.w}" y2="146.5" stroke="${ink}" stroke-width="1"/>`);
+        if (o.w > o.doorW) b.push(`<line x1="${hx}" y1="143.5" x2="${o.x + o.w}" y2="143.5" stroke="${ink}" stroke-width="1"/><line x1="${hx}" y1="146.5" x2="${o.x + o.w}" y2="146.5" stroke="${ink}" stroke-width="1"/>`);
         b.push(`<line x1="${hx}" y1="140" x2="${hx}" y2="${140 - lw}" stroke="${ink}" stroke-width="1.5"/>`);
         b.push(`<path d="M${hx} ${140 - lw} A${lw} ${lw} 0 0 0 ${hx - lw} 140" fill="none" stroke="${ink}" stroke-width="0.8" stroke-dasharray="3 3"/>`);
         return;
