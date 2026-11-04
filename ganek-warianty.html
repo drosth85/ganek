@@ -229,20 +229,20 @@ const V = {
   E: {
     name: 'E · Drzwi 90 i okna fix 50', short: 'drzwi 90 niebieskie jak w F, po bokach okna 50 × 120 ze szprosami, w boku 120 × 120',
     front: [
-      { t: 'win', x: 475, w: 50, yb: 123, h: 120, c: 1, r: 4, fix: 1 },
-      { t: 'door', x: 547, w: 90, yb: 30, h: 207, db: 1, doorW: 90, col: DOOR_F },
-      { t: 'win', x: 659, w: 50, yb: 123, h: 120, c: 1, r: 4, fix: 1 },
+      { t: 'win', x: 475, w: 50, yb: 121, h: 120, c: 1, r: 4, fix: 1 },
+      { t: 'door', x: 547, w: 90, yb: 30, h: 211, db: 1, doorW: 90, col: DOOR_F },
+      { t: 'win', x: 659, w: 50, yb: 121, h: 120, c: 1, r: 4, fix: 1 },
     ],
     posts: [], wardrobe: 59,
-    side: [{ t: 'win', x: 115, w: 120, yb: 123, h: 120, c: 3, r: 4, fix: 1 }],
+    side: [{ t: 'win', x: 115, w: 120, yb: 121, h: 120, c: 3, r: 4, fix: 1 }],
     info: `<h3>E · Drzwi 90 i okna fix 50</h3>
       <ul>
-        <li>Drzwi 90 × 207 na środku, jak wzór ze zdjęcia, bez dostawki, kolor jak w F: niebieski delikatnie ciemniejszy od frontu domu. Po bokach okna 50 × 120, 22 cm od drzwi. Prawy bok: okno 120 × 120. Góra okien na wysokości 243, jak góra okna w ścianie domu (wymiar szacowany ze zdjęć), czyli 6 cm wyżej niż góra drzwi.</li>
+        <li>Drzwi 90 × 211 na środku, jak wzór ze zdjęcia, bez dostawki, kolor jak w F: niebieski delikatnie ciemniejszy od frontu domu. Po bokach okna 50 × 120, 22 cm od drzwi. Prawy bok: okno 120 × 120. Wszystkie okna i drzwi mają górę na tej samej wysokości: 241 nad terenem, 211 nad podłogą ganku. Okno w ścianie domu ma górę około 243 (wymiar szacowany ze zdjęć).</li>
         <li>Okna z <a href="https://www.sklep-ecohouse.pl/produkt/drewniana-witryna-okno-fix-nieotwierane-ze-szprosem/" target="_blank" rel="noopener">Eco-House</a>: drewniane, stałe (nieotwierane), rama 6,5 cm, szprosy przybijane od zewnątrz, surowe do własnego wykończenia. W boku układ jak na zdjęciu sklepu, 3 × 4 szyby. Na froncie 1 × 4, jak wąskie okno z galerii sklepu. Wszędzie 4 rzędy na tej samej wysokości.</li>
         <li>Lewe okno zachodzi na szafę 60 o 1 cm, dlatego <b>szafa ma 59</b>. Okno 120 w boku zostawia 15 cm ściany z każdej strony, więc opaska dochodzi do słupków narożnych.</li>
-        <li><b>Plus:</b> dużo światła z boku, spójne szprosy, tańsze okna. <b>Minus:</b> otwierają się tylko drzwi, ganek w słońcu będzie się nagrzewał. Góra okien nie pokrywa się z górą drzwi.</li>
+        <li><b>Plus:</b> dużo światła z boku, spójne szprosy, tańsze okna. <b>Minus:</b> otwierają się tylko drzwi, ganek w słońcu będzie się nagrzewał.</li>
       </ul>
-      ${order(['front: 2 × okno fix <b>50 × 120</b>, 1 × 4 szyby, wymiar nietypowy (do wyceny w sklepie), szacunek 2 × 600–900 zł', 'prawy bok: okno fix <b>120 × 120</b>, 3 × 4 szyby, wymiar nietypowy (do wyceny w sklepie), szacunek 1 100–1 500 zł', 'drzwi <b>90 × 207</b>, niebieskie jak w F, u stolarza · 7 000–12 000 zł'], 'około 9–15 tys. zł')}`
+      ${order(['front: 2 × okno fix <b>50 × 120</b>, 1 × 4 szyby, wymiar nietypowy (do wyceny w sklepie), szacunek 2 × 600–900 zł', 'prawy bok: okno fix <b>120 × 120</b>, 3 × 4 szyby, wymiar nietypowy (do wyceny w sklepie), szacunek 1 100–1 500 zł', 'drzwi <b>90 × 211</b>, niebieskie jak w F, u stolarza · 7 000–12 000 zł'], 'około 9–15 tys. zł')}`
   },
 };
 const qv = new URLSearchParams(location.search).get('v'); if (V[qv]) st.v = qv;
@@ -254,7 +254,7 @@ const trCols = w => Math.max(2, Math.round(w / 35));
 const trTop = () => Math.min(TR.top, roofGeom().plate - (st.pas === 'belka' ? 23 : 15));
 function withTr(list) {
   const tr = list.filter(o => o.t === 'door' || o.t === 'win').map(o =>
-    ({ t: 'win', x: o.x, w: o.w, yb: TR.head, h: trTop() - TR.head, c: trCols(o.w), r: 1, tr: 1 }));
+    ({ t: 'win', x: o.x, w: o.w, yb: o.yb + o.h, h: trTop() - (o.yb + o.h), c: trCols(o.w), r: 1, tr: 1 }));
   return [...list, ...tr];
 }
 // Pane-count override for the front windows (the side window always keeps 6 panes).
@@ -304,7 +304,7 @@ function szybyInfo() {
 }
 function trInfo(k) {
   if (st.trs !== 'tak') return '';
-  const n = V[k].front.length + V[k].side.length, h = trTop() - TR.head;
+  const n = V[k].front.length + V[k].side.length, h = trTop() - Math.max(...V[k].front.map(o => o.yb + o.h));
   const tight = h < 24 ? ` Przy dachu ${st.pitch}° ząbki szczytu schodzą nisko, więc naświetle ma tylko ${fmt(h)} cm.` : '';
   return `<p class="note" style="background:#f3ece2;border-radius:6px;padding:6px 10px"><b>Włączony pasek naświetli:</b> okna i drzwi zostają w pełnej wysokości, a nad każdym otworem stoi naświetle stałe <b>${fmt(h)} cm</b> wysokości, aż do sufitu ganku (265 nad terenem, wyżej się nie da, bo tam jest sufit).${tight} Okno z naświetlem można zamówić jako jedną ramę: 117,5 + ${fmt(h)} daje około ${fmt(117.5 + h)} cm, blisko katalogowej wysokości 143,5. Razem ${n} naświetli, około ${n * 600}–${n * 1000} zł więcej niż w budżecie poniżej (szacunek na oko).</p>`;
 }
