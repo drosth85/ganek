@@ -54,6 +54,7 @@ const DOOR_BLUE = { frame: '#88a8d0', leaf: '#94b3d9', dark: '#6584ab' };
 // variant D door: 90 wide door + fixed full-glass sidelight 40 on the right, one unit centred on the porch axis, RAL 5002
 const DOOR_DB = { t: 'door', x: 527, w: 130, yb: 30, h: 207, db: 1, doorW: 90 };
 const DOOR_RAL = { frame: '#002c63', leaf: '#00387b', dark: '#001f47', groove: '#3f6aa5' };
+const DOOR_F = { ...DOOR_BLUE, groove: '#6584ab' };
 const SIDE = [{ t: 'win', x: 131.75, w: 86.5, yb: 119.5, h: 117.5, c: 2, r: 3 }];
 const BUDGET_NOTE = 'Budżet to szacunek na oko: ceny brutto z VAT, bez montażu, sosna, szyba zespolona, szprosy. Drzwi u stolarza mają największy rozrzut.';
 const order = (rows, sum) => `<p class="note"><b>Do zamówienia</b> (szer. × wys. w cm):</p><ul class="note">${rows.map(r => `<li>${r}</li>`).join('')}</ul><p class="note"><b>Razem okna + drzwi: ${sum}</b>. ${BUDGET_NOTE}</p>`;
@@ -119,22 +120,22 @@ const V = {
       ${order(['drzwi <b>90 × 207</b> z dostawką <b>40 × 207</b> (razem 130 × 207), RAL 5002, u stolarza · 9 000–16 000 zł', ROW_SIDE], 'około 11–19 tys. zł')}`
   },
   E: {
-    name: 'E · Drzwi 90 i okna fix 50', short: 'drzwi 90 w RAL 5002, po bokach okna 50 × 120 ze szprosami, w boku 120 × 120',
+    name: 'E · Drzwi 90 i okna fix 50', short: 'drzwi 90 niebieskie jak w F, po bokach okna 50 × 120 ze szprosami, w boku 120 × 120',
     front: [
       { t: 'win', x: 475, w: 50, yb: 123, h: 120, c: 1, r: 4, fix: 1 },
-      { t: 'door', x: 547, w: 90, yb: 30, h: 207, db: 1, doorW: 90 },
+      { t: 'door', x: 547, w: 90, yb: 30, h: 207, db: 1, doorW: 90, col: DOOR_F },
       { t: 'win', x: 659, w: 50, yb: 123, h: 120, c: 1, r: 4, fix: 1 },
     ],
     posts: [], wardrobe: 59,
     side: [{ t: 'win', x: 115, w: 120, yb: 123, h: 120, c: 3, r: 4, fix: 1 }],
     info: `<h3>E · Drzwi 90 i okna fix 50</h3>
       <ul>
-        <li>Drzwi 90 × 207 na środku, jak wzór ze zdjęcia, w kolorze RAL 5002 (na ekranie przybliżony), bez dostawki. Po bokach okna 50 × 120, 22 cm od drzwi. Prawy bok: okno 120 × 120. Góra okien na wysokości 243, jak góra okna w ścianie domu (wymiar szacowany ze zdjęć), czyli 6 cm wyżej niż góra drzwi.</li>
+        <li>Drzwi 90 × 207 na środku, jak wzór ze zdjęcia, bez dostawki, kolor jak w F: niebieski delikatnie ciemniejszy od frontu domu. Po bokach okna 50 × 120, 22 cm od drzwi. Prawy bok: okno 120 × 120. Góra okien na wysokości 243, jak góra okna w ścianie domu (wymiar szacowany ze zdjęć), czyli 6 cm wyżej niż góra drzwi.</li>
         <li>Okna z <a href="https://www.sklep-ecohouse.pl/produkt/drewniana-witryna-okno-fix-nieotwierane-ze-szprosem/" target="_blank" rel="noopener">Eco-House</a>: drewniane, stałe (nieotwierane), rama 6,5 cm, szprosy przybijane od zewnątrz, surowe do własnego wykończenia. W boku układ jak na zdjęciu sklepu, 3 × 4 szyby. Na froncie 1 × 4, jak wąskie okno z galerii sklepu. Wszędzie 4 rzędy na tej samej wysokości.</li>
         <li>Lewe okno zachodzi na szafę 60 o 1 cm, dlatego <b>szafa ma 59</b>. Okno 120 w boku zostawia 15 cm ściany z każdej strony, więc opaska dochodzi do słupków narożnych.</li>
         <li><b>Plus:</b> dużo światła z boku, spójne szprosy, tańsze okna. <b>Minus:</b> otwierają się tylko drzwi, ganek w słońcu będzie się nagrzewał. Góra okien nie pokrywa się z górą drzwi.</li>
       </ul>
-      ${order(['front: 2 × okno fix <b>50 × 120</b>, 1 × 4 szyby, wymiar nietypowy (do wyceny w sklepie), szacunek 2 × 600–900 zł', 'prawy bok: okno fix <b>120 × 120</b>, 3 × 4 szyby, wymiar nietypowy (do wyceny w sklepie), szacunek 1 100–1 500 zł', 'drzwi <b>90 × 207</b>, RAL 5002, u stolarza · 7 000–12 000 zł'], 'około 9–15 tys. zł')}`
+      ${order(['front: 2 × okno fix <b>50 × 120</b>, 1 × 4 szyby, wymiar nietypowy (do wyceny w sklepie), szacunek 2 × 600–900 zł', 'prawy bok: okno fix <b>120 × 120</b>, 3 × 4 szyby, wymiar nietypowy (do wyceny w sklepie), szacunek 1 100–1 500 zł', 'drzwi <b>90 × 207</b>, niebieskie jak w F, u stolarza · 7 000–12 000 zł'], 'około 9–15 tys. zł')}`
   },
 };
 
@@ -288,7 +289,7 @@ function opaska3d(g, map, o, u, p) {
   map(g, u - l, u + o.w + r, o.yb + o.h, o.yb + o.h + OP, -2, 0, m);
 }
 function doorDb3d(g, map, o, u) {
-  const { yb, h, w, doorW } = o, f = 5, H = h - f, c = DOOR_RAL;
+  const { yb, h, w, doorW } = o, f = 5, H = h - f, c = o.col || DOOR_RAL;
   const fm = mat(c.frame, { roughness: 0.6 }), lm = mat(c.leaf, { roughness: 0.6 }), gm = mat(C.glassDark, { roughness: 0.1, metalness: 0.4 });
   const gr = mat(c.groove), hm = mat('#17171a', { metalness: 0.5, roughness: 0.4 });
   // unit frame, mullion between door and sidelight, sidelight sill
